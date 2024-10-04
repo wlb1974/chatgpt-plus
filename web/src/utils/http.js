@@ -22,7 +22,11 @@ axios.interceptors.response.use(
         let data = response.data;
         if (data.code === 0) {
             return response
-        } else {
+        } 
+        else  if(data.code == 401 && !window.location.href.indexOf("/login") == -1){  // 未登录并且非登录页，跳转到登录页
+            window.location.href = "/login";
+        }
+        else {
             return Promise.reject(response.data)
         }
     }, error => {

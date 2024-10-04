@@ -39,13 +39,13 @@
                 <chat-prompt
                     v-if="item.type==='prompt'"
                     :content="item.content"
-                    :created-at="dateFormat(item['created_at'])"
+                    :created-at="dateFormat(item['createdAt'])"
                     :icon="item.icon"
                     :model="model"
                     :tokens="item['tokens']"/>
                 <chat-reply v-else-if="item.type==='reply'"
                             :content="item.content"
-                            :created-at="dateFormat(item['created_at'])"
+                            :created-at="dateFormat(item['createdAt'])"
                             :icon="item.icon"
                             :org-content="item.orgContent"
                             :tokens="item['tokens']"/>
@@ -56,7 +56,7 @@
                                   :chat-id="chatId"
                                   @disable-input="disableInput(true)"
                                   @enable-input="enableInput"
-                                  :created-at="dateFormat(item['created_at'])"/>
+                                  :created-at="dateFormat(item['createdAt'])"/>
               </van-cell>
             </van-list>
           </div>
@@ -222,7 +222,7 @@ const connect = function (chat_id, role_id) {
       host = 'ws://' + location.host;
     }
   }
-  const _socket = new WebSocket(host + `/api/chat/new?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${model}&token=${getUserToken()}`);
+  const _socket = new WebSocket(host + `infra/ws/chat?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${model}&token=${getUserToken()}`);
   _socket.addEventListener('open', () => {
     loading.value = false
     previousText.value = '';
@@ -241,11 +241,13 @@ const connect = function (chat_id, role_id) {
   });
 
   _socket.addEventListener('message', event => {
+    
     if (event.data instanceof Blob) {
       const reader = new FileReader();
       reader.readAsText(event.data, "UTF-8");
       reader.onload = () => {
         const data = JSON.parse(String(reader.result));
+        
         if (data.type === 'start') {
           chatData.value.push({
             type: "reply",

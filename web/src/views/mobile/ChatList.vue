@@ -33,7 +33,7 @@
             <van-cell @click="changeChat(item)">
               <div class="chat-list-item">
                 <van-image
-                    :src="item.icon"
+                    :src=getIcon(item.roleId)
                     round
                 />
                 <div class="van-ellipsis">{{ item.title }}</div>
@@ -115,13 +115,14 @@ checkSession().then((user) => {
           text: items[i].name,
           value: items[i].id,
           icon: items[i].icon,
-          helloMsg: items[i].hello_msg
+          helloMsg: items[i].helloMsg
         })
       }
     }
   }).catch(() => {
     showFailToast("加载聊天角色失败")
   })
+
 
   // 加载模型
   httpGet('/api/model/list?enable=1').then(res => {
@@ -161,6 +162,16 @@ const getModelValue = (model_id) => {
   }
   return ""
 }
+
+
+const getIcon = (roleId) => {
+    for (let i = 0; i < roles.value.length; i++) {
+      if (roles.value[i].value === roleId) {
+        return roles.value[i].icon
+      }
+    }
+    return ""
+  }
 
 const search = () => {
   if (chatName.value === '') {
@@ -207,28 +218,30 @@ const newChat = (item) => {
     title: '新建会话',
     chatId: 0
   })
+  console.info("newChat: " + json.stringify(getChatConfig()))
   router.push('/mobile/chat/session')
 }
 
 const changeChat = (chat) => {
+  console.info('changeChat: ' + JSON.stringify(chat))
   let role = {}
   for (let i = 0; i < roles.value.length; i++) {
-    if (roles.value[i].value === chat.role_id) {
+    if (roles.value[i].value === chat.roleId) {
       role = roles.value[i]
       break
     }
   }
   setChatConfig({
     role: {
-      id: chat.role_id,
+      id: chat.roleId,
       name: role.text,
       icon: role.icon
     },
-    model: chat.model_id,
-    modelValue: getModelValue(chat.model_id),
+    model: chat.modelId,
+    modelValue: getModelValue(chat.modelId),
     title: chat.title,
-    chatId: chat.chat_id,
-    helloMsg: chat.hello_msg,
+    chatId: chat.chatId,
+    helloMsg: role.helloMsg,
   })
   router.push('/mobile/chat/session')
 }
@@ -248,7 +261,7 @@ const saveTitle = () => {
 }
 
 const removeChat = (item) => {
-  httpGet('/api/chat/remove?chat_id=' + item.chat_id).then(() => {
+  httpGet('/api/chat/remove?chat_id=' + item.chatId).then(() => {
     chats.value = removeArrayItem(chats.value, item, function (e1, e2) {
       return e1.id === e2.id
     })

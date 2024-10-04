@@ -7,6 +7,15 @@
 <script setup>
 import {ElConfigProvider} from 'element-plus';
 import zhCn from 'element-plus/es/locale/lang/zh-cn';
+import { getCurrentInstance , onMounted } from 'vue';
+import { initChatRobot } from './utils/chatrobot/chatbotinit';
+
+
+onMounted(() => {
+
+});
+
+
 </script>
 
 

@@ -9,7 +9,7 @@
         <div class="content" v-html="content"></div>
         <div class="bar" v-if="createdAt !== ''">
           <span class="bar-item"><el-icon><Clock/></el-icon> {{ createdAt }}</span>
-          <span class="bar-item">tokens: {{ finalTokens }}</span>
+          <span class="bar-item" v-if="type === 'reply'">tokens: {{ finalTokens }}</span>
         </div>
       </div>
     </div>
@@ -54,7 +54,7 @@ export default defineComponent({
     }
   },
   mounted() {
-    if (!this.finalTokens) {
+    if ('prompt' === this.type && !this.finalTokens) {
       httpPost("/api/chat/tokens", {text: this.content, model: this.model}).then(res => {
         this.finalTokens = res.data;
       })

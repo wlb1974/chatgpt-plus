@@ -59,7 +59,8 @@ onMounted(() => {
     const items = res.data
     // 处理 hello message
     for (let i = 0; i < items.length; i++) {
-      items[i].intro = substr(items[i].hello_msg, 80)
+      items[i].intro = substr(items[i].helloMsg, 80)
+      items[i].key = items[i].marker
     }
     list.value = items
   }).catch(e => {
@@ -72,16 +73,18 @@ onMounted(() => {
 const getRoles = () => {
   showLoginDialog.value = false
   checkSession().then(user => {
-    roles.value = user.chat_roles
+    roles.value = JSON.parse(user.chatRolesJson)
   }).catch(() => {
   })
 }
 
 const updateRole = (row, opt) => {
+  console.info("updateRole:  row=" + JSON.stringify(row) + " opt: " + opt + " roles=" + JSON.stringify(roles.value))
   checkSession().then(() => {
     const title = ref("")
     if (opt === "add") {
       title.value = "添加应用"
+
       const exists = arrayContains(roles.value, row.key)
       if (exists) {
         return
@@ -106,6 +109,7 @@ const updateRole = (row, opt) => {
 }
 
 const hasRole = (roleKey) => {
+  console.info("roleKey=" + roleKey + "roles=" + JSON.stringify(roles.value))
   return arrayContains(roles.value, roleKey, (v1, v2) => v1 === v2)
 }
 </script>

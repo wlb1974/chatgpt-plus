@@ -43,6 +43,7 @@
 .page-sd .inner .sd-box .sd-params .param-line .grid-content,
 .page-sd .inner .sd-box .sd-params .param-line .form-item-inner {
   display: flex;
+  width : 100%
 }
 .page-sd .inner .sd-box .sd-params .param-line .grid-content .el-icon,
 .page-sd .inner .sd-box .sd-params .param-line .form-item-inner .el-icon {
@@ -132,6 +133,17 @@
   font-size: 20px;
   cursor: pointer;
 }
+
+.page-sd .inner .task-list-box .finish-job-list .job-item .remove {
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+.page-sd .inner .task-list-box .finish-job-list .job-item:hover .remove {
+  display: block;
+}
+
 .page-sd .inner .task-list-box .finish-job-list .animate:hover {
   box-shadow: 0 0 10px rgba(71,255,241,0.6); /* 添加阴影效果 */
   transform: translateY(-10px); /* 向上移动10像素 */

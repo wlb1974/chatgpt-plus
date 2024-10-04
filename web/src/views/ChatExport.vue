@@ -43,6 +43,7 @@ import hl from "highlight.js";
 import {ElMessage} from "element-plus";
 import {Promotion} from "@element-plus/icons-vue";
 import ChatMidJourney from "@/components/ChatMidJourney.vue";
+import jsPDF from 'jspdf'
 
 const chatData = ref([])
 const router = useRouter()
@@ -94,7 +95,29 @@ httpGet('/api/chat/detail?chat_id=' + chatId).then(res => {
 
 const exportChat = () => {
   window.print()
+  // exportDivToPdf('chat-' + chatId + '.pdf')
 }
+
+function exportDivToPdf(filename) {
+  // Get the div element
+  const content = document.documentElement.innerHTML;
+  console.info(content)
+
+  // Create a new jsPDF instance
+  const pdf = new jsPDF({
+        format: 'a4'
+      });
+      
+      
+  // Add the div to the PDF
+  pdf.html(content, {
+        callback: function (pdf) {
+          // Save the PDF file
+          pdf.save(filename)
+        }
+      });
+}
+
 </script>
 <style lang="stylus">
 .chat-export {
@@ -116,7 +139,7 @@ const exportChat = () => {
     }
 
 
-    .chat-line {
+    .chat-line-prompt {
       font-size: 14px;
       display: flex;
       align-items: flex-start;
@@ -130,12 +153,23 @@ const exportChat = () => {
             margin-top 0
           }
         }
+        .chat-icon {
+          margin-right: 20px
+
+          img {
+            width 36px
+            height 36px
+            border-radius: 10px;
+            padding: 1px
+          }
+        }
+        
       }
     }
 
     .chat-line-reply {
       padding-top: 1.5rem;
-
+      border-bottom: 1px solid #d9d9e3;
       .chat-line-inner {
         display flex
 
@@ -155,8 +189,8 @@ const exportChat = () => {
           margin-right: 20px
 
           img {
-            width 30px
-            height 30px
+            width 36px
+            height 36px
             border-radius: 10px;
             padding: 1px
           }

@@ -35,8 +35,13 @@ import {
 import {router} from "@/router";
 import 'v3-waterfall/dist/style.css'
 import V3waterfall from "v3-waterfall";
+import { initChatRobot } from '@/utils/chatrobot/chatbotinit';
+
 
 const app = createApp(App)
+
+initChatRobot(app);
+
 app.use(createPinia())
 app.use(ConfigProvider);
 app.use(Tabbar);
@@ -66,5 +71,7 @@ app.use(Uploader);
 app.use(Tag);
 app.use(V3waterfall)
 app.use(router).use(ElementPlus).mount('#app')
+
+
 
 

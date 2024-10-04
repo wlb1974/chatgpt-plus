@@ -32,6 +32,20 @@
               <el-form-item label="图片尺寸">
                 <template #default>
                   <div class="form-item-inner">
+                    <el-select v-model="params.imageSize" size="small">
+                      <el-option v-for="item in imageSizeArg" :label="item" :value="item" :key="item"/>
+                    </el-select>
+                    <el-tooltip
+                        effect="light"
+                        content="出图的图片尺寸"
+                        raw-content
+                        placement="right"
+                    >
+                    <el-icon>
+                        <InfoFilled/>
+                      </el-icon>
+                    </el-tooltip>
+<!-- 
                     <el-row :gutter="20">
                       <el-col :span="12">
                         <el-input v-model.number="params.width" size="small" placeholder="图片宽度"/>
@@ -39,7 +53,7 @@
                       <el-col :span="12">
                         <el-input v-model.number="params.height" size="small" placeholder="图片高度"/>
                       </el-col>
-                    </el-row>
+                    </el-row> -->
                   </div>
                 </template>
               </el-form-item>
@@ -240,6 +254,27 @@
                 </el-form-item>
               </div>
             </div>
+            <div class="param-line" style="padding-top: 10px">
+              <el-form-item label="出图风格">
+                <template #default>
+                  <div class="form-item-inner">
+                    <el-select v-model="params.style" size="small">
+                      <el-option v-for="item in imageStyleArg" :label="item.value" :value="item.key" :key="item.key"/>
+                    </el-select>
+                    <el-tooltip
+                        effect="light"
+                        content="可以选择出图的风格"
+                        raw-content
+                        placement="right"
+                    >
+                      <el-icon>
+                        <InfoFilled/>
+                      </el-icon>
+                    </el-tooltip>
+                  </div>
+                </template>
+              </el-form-item>
+            </div>
 
             <div class="param-line" v-loading="loading" element-loading-background="rgba(122, 122, 122, 0.8)">
               <el-input
@@ -340,6 +375,7 @@
                       <div class="image-slot">
                         <i class="iconfont icon-quick-start"></i>
                         <span>任务正在排队中</span>
+                        <span>{{ getTruncatedPrompt(scope.item['prompt']) }}</span>
                       </div>
                     </template>
                   </el-image>
@@ -352,11 +388,12 @@
           <div class="finish-job-list">
             <ItemList :items="finishedJobs" v-if="finishedJobs.length > 0" :width="240" :gap="16">
               <template #default="scope">
-                <div class="job-item animate" @click="showTask(scope.item)">
-                  <el-image
+                <div class="job-item animate">
+                  <el-image 
                       :src="scope.item['img_url']+'?imageView2/1/w/240/h/240/q/75'"
                       fit="cover"
-                      loading="lazy">
+                      loading="lazy" 
+                      @click="showTask(scope.item)">
                     <template #placeholder>
                       <div class="image-slot">
                         正在加载图片
@@ -371,6 +408,18 @@
                       </div>
                     </template>
                   </el-image>
+
+                  <div class="opt" >
+                    <div class="opt-line">
+                      <ul>
+                        <li><span>{{ getTruncatedPrompt(scope.item.prompt) }}</span> <el-icon class="copy-prompt"
+                                         :data-clipboard-text="scope.item.prompt">
+                                  <DocumentCopy />
+                                </el-icon></li>
+                      </ul>
+                    </div>
+                  </div>
+
 
                   <div class="remove">
                     <el-button type="danger" :icon="Delete" @click="removeImage($event,scope.item)" circle/>
@@ -413,10 +462,17 @@
                 反向提示词
               </el-divider>
               <div class="prompt">
-                <span>{{ item.params.negative_prompt }}</span>
+                <span>{{ item.params["negative_prompt"] }}</span>
                 <el-icon class="copy-prompt" :data-clipboard-text="item.params.negative_prompt">
                   <DocumentCopy/>
                 </el-icon>
+              </div>
+            </div>
+
+            <div class="info-line">
+              <div class="wrapper">
+                <label>出图风格：</label>
+                <div class="item-value">{{ getImageStyleValue(item.params.style) }}</div>
               </div>
             </div>
 
@@ -524,7 +580,40 @@ window.onresize = () => {
 }
 const samplers = ["Euler a", "Euler", "DPM++ 2S a Karras", "DPM++ 2M Karras", "DPM++ SDE Karras", "DPM++ 2M SDE Karras"]
 const scaleAlg = ["Latent", "ESRGAN_4x", "R-ESRGAN 4x+", "SwinIR_4x", "LDSR"]
+const imageSizeArg = ["768x768", "768x1024", "1024x768", "576x1024", "1024x576", "1024x1024"]
+
+const imageStyleArg = [{key:'Base',value:'基础风格'},
+{key:'3D Model',value:'3D模型'},
+{key:'Analog Film',value:'模拟胶片'},
+{key:'Anime',value:'动漫'},
+{key:'Cinematic',value:'电影'},
+{key:'Comic Book',value:'漫画'},
+{key:'Craft Clay',value:'工艺黏土'},
+{key:'Digital Art',value:'数字艺术'},
+{key:'Enhance',value:'增强'},
+{key:'Fantasy Art',value:'幻想艺术'},
+{key:'lsometric',value:'等距风格'},
+{key:'Line Art',value:'线条艺术'},
+{key:'Lowpoly',value:'低多边形'},
+{key:'Neonpunk',value:'霓虹朋克'},
+{key:'Origami',value:'折纸'},
+{key:'Photographic',value:'摄影'},
+{key:'Pixel Art',value:'像素艺术'},
+{key:'Texture',value:'纹理'}]
+
+// [{key:'cartoon', value:'卡通画风格'},
+//                       {key:'pencil', value:'铅笔风格'},
+//                       {key:'color_pencil', value:'彩色铅笔画风格'},
+//                       {key:'warm', value:'彩色糖块油画风格'},
+//                       {key:'wave', value:'神奈川冲浪里油画风格'},
+//                       {key:'lavender', value:'薰衣草油画风格'},
+//                       {key:'mononoke', value:'奇异油画风格'},
+//                       {key:'scream', value:'呐喊油画风格'},
+//                       {key:'gothic', value:'哥特油画风格'}]
+
+
 const params = ref({
+  imageSize : '1024x1024',
   width: 1024,
   height: 1024,
   sampler: samplers[0],
@@ -539,6 +628,7 @@ const params = ref({
   hd_steps: 15,
   prompt: "",
   negative_prompt: "nsfw, paintings,low quality,easynegative,ng_deepnegative ,lowres,bad anatomy,bad hands,bad feet",
+  style:"Base",
 })
 
 const runningJobs = ref([])
@@ -551,6 +641,15 @@ if (_params) {
 }
 const imgCalls = ref(0)
 
+const getImageStyleValue = (style) => {
+  if(style == null) {
+    return '基础风格'
+  }
+  const styleObj = imageStyleArg.find(item => item.key === style);
+
+  return styleObj ? styleObj.value : '基础风格'
+}
+
 const rewritePrompt = () => {
   loading.value = true
   httpPost("/api/prompt/rewrite", {"prompt": params.value.prompt}).then(res => {
@@ -561,6 +660,10 @@ const rewritePrompt = () => {
     ElMessage.error("翻译失败：" + e.message)
   })
 }
+
+const getTruncatedPrompt = (prompt) => {
+      return prompt.length > 100 ? prompt.slice(0, 80) + '...' : prompt;
+    }
 
 const translatePrompt = () => {
   loading.value = true
@@ -575,7 +678,7 @@ const translatePrompt = () => {
 
 onMounted(() => {
   checkSession().then(user => {
-    imgCalls.value = user['img_calls']
+    imgCalls.value = user['imgCalls']
 
     fetchRunningJobs(user.id)
     fetchFinishJobs(user.id)
@@ -584,12 +687,30 @@ onMounted(() => {
     router.push('/login')
   });
 
-  const fetchRunningJobs = (userId) => {
+
+  const clipboard = new Clipboard('.copy-prompt');
+  clipboard.on('success', () => {
+    ElMessage.success("复制成功！");
+  })
+
+  clipboard.on('error', () => {
+    ElMessage.error('复制失败！');
+  })
+})
+
+
+const fetchRunningJobs = (userId) => {
+    // 页面路由发生变化后， 不再加载任务
+    // if(location.href.indexOf("/sd") === -1) {
+    //   return
+    // }
+
     // 获取运行中的任务
     httpGet(`/api/sd/jobs?status=0&user_id=${userId}`).then(res => {
+
       const jobs = res.data
       const _jobs = []
-      for (let i = 0; i < jobs.length; i++) {
+      for (let i = 0; jobs != null && i < jobs.length; i++) {
         if (jobs[i].progress === -1) {
           ElNotification({
             title: '任务执行失败',
@@ -601,9 +722,16 @@ onMounted(() => {
         }
         _jobs.push(jobs[i])
       }
+      if(_jobs.length > 0) {
+        setTimeout(() => fetchRunningJobs(userId), 1000)
+        return
+      }
+      // 运行的任务发生变化， 重新获取已完成的任务
+      if(_jobs.length != runningJobs.value.length) {
+        fetchFinishJobs(userId)
+      }
       runningJobs.value = _jobs
-
-      setTimeout(() => fetchRunningJobs(userId), 1000)
+      // setTimeout(() => fetchRunningJobs(userId), 5000)
     }).catch(e => {
       ElMessage.error("获取任务失败：" + e.message)
       setTimeout(() => fetchRunningJobs(userId), 5000)
@@ -612,8 +740,9 @@ onMounted(() => {
 
   // 获取已完成的任务
   const fetchFinishJobs = (userId) => {
+        // 页面路由发生变化后， 不再加载任务
     httpGet(`/api/sd/jobs?status=1&user_id=${userId}`).then(res => {
-      if (finishedJobs.value.length === 0 || res.data.length > finishedJobs.value.length) {
+      if (res.code != 0 || finishedJobs.value.length === 0 || res.data == null || res.data.length != finishedJobs.value.length) {
         finishedJobs.value = res.data
         setTimeout(() => fetchFinishJobs(userId), 1000)
         return
@@ -631,22 +760,18 @@ onMounted(() => {
       if (changed) {
         finishedJobs.value = list
       }
-      setTimeout(() => fetchFinishJobs(userId), 1000)
+
+      // if(changed || runningJobs.value.length > 0) {
+      //   setTimeout(() => fetchFinishJobs(userId), 1000)
+      //   return 
+      // }
+
+      // setTimeout(() => fetchFinishJobs(userId), 5000)
     }).catch(e => {
       ElMessage.error("获取任务失败：" + e.message)
       setTimeout(() => fetchFinishJobs(userId), 5000)
     })
   }
-
-  const clipboard = new Clipboard('.copy-prompt');
-  clipboard.on('success', () => {
-    ElMessage.success("复制成功！");
-  })
-
-  clipboard.on('error', () => {
-    ElMessage.error('复制失败！');
-  })
-})
 
 
 // 创建绘图任务
@@ -659,10 +784,21 @@ const generate = () => {
   if (params.value.seed === '') {
     params.value.seed = -1
   }
+  // 1024x1024 分解成 width 和 height
+  const [width,height] = params.value.imageSize.split('x')
+  params.width = width 
+  params.height = height 
+
   params.value.session_id = getSessionId()
   httpPost("/api/sd/image", params.value).then(() => {
     ElMessage.success("绘画任务推送成功，请耐心等待任务执行...")
     imgCalls.value -= 1
+    runningJobs.value.push({
+      prompt: params.value.prompt,
+      img_url: '',
+      progress: 0,
+    })
+    fetchRunningJobs(0) ;
   }).catch(e => {
     ElMessage.error("任务推送失败：" + e.message)
   })
@@ -674,7 +810,11 @@ const showTask = (row) => {
 }
 
 const copyParams = (row) => {
-  params.value = row.params
+  params.value = {...row.params}
+  params.value.imageSize = row.params.width + 'x' + row.params.height
+  if(params.value.style == null) {
+    params.value.style = 'Base'
+  }
   showTaskDialog.value = false
 }
 

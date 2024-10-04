@@ -161,3 +161,9 @@ export function substr(str, length) {
     return result
 }
 
+// 获取URL上的参数
+export function getUrlParam(name) {
+    const urlParams = new URLSearchParams(window.location.search.substring(1));
+    return urlParams.get(name);
+}
+

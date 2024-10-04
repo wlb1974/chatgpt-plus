@@ -14,7 +14,7 @@ module.exports = defineConfig({
         ]
     },
 
-    publicPath: process.env.NODE_ENV === 'production' ? '/' : '/',
+    publicPath: process.env.NODE_ENV === 'production' ? '/txrobot' : '/',
 
     outputDir: 'dist',
     crossorigin: "anonymous",

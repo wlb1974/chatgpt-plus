@@ -17,8 +17,8 @@
           </div>
 
           <div class="content" :style="{height: leftBoxHeight+'px'}">
-            <el-row v-for="chat in chatList" :key="chat.chat_id">
-              <div :class="chat.chat_id === activeChat.chat_id?'chat-list-item active':'chat-list-item'"
+            <el-row v-for="chat in chatList" :key="chat.chatId">
+              <div :class="chat.chatId === activeChat.chatId?'chat-list-item active':'chat-list-item'"
                    @click="changeChat(chat)">
                 <el-image :src="chat.icon" class="avatar"/>
                 <span class="chat-title-input" v-if="chat.edit">
@@ -67,13 +67,13 @@
                   <span>注销</span>
                 </el-dropdown-item>
 
-                <el-dropdown-item>
+                <!-- <el-dropdown-item>
                   <i class="iconfont icon-github"></i>
                   <span>
                     powered by
                     <el-link type="primary" href="https://github.com/yangjian102621/chatgpt-plus" target="_blank">chatgpt-plus-v3</el-link>
                  </span>
-                </el-dropdown-item>
+                </el-dropdown-item> -->
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -117,12 +117,12 @@
               <span>导出会话</span>
             </el-button>
 
-            <el-button type="warning" @click="showFeedbackDialog = true">
+            <!-- <el-button type="warning" @click="showFeedbackDialog = true">
               <el-icon>
                 <Promotion/>
               </el-icon>
               <span>意见反馈</span>
-            </el-button>
+            </el-button> -->
           </div>
         </div>
 
@@ -137,24 +137,24 @@
                   <chat-prompt
                       v-if="item.type==='prompt'"
                       :icon="item.icon"
-                      :created-at="dateFormat(item['created_at'])"
+                      :created-at="dateFormat(item['createdAt'])"
                       :tokens="item['tokens']"
                       :model="getModelValue(modelID)"
                       :content="item.content"/>
                   <chat-reply v-else-if="item.type==='reply'"
                               :icon="item.icon"
                               :org-content="item.orgContent"
-                              :created-at="dateFormat(item['created_at'])"
+                              :created-at="dateFormat(item['createdAt'])"
                               :tokens="item['tokens']"
                               :content="item.content"/>
                   <chat-mid-journey v-else-if="item.type==='mj'"
                                     :content="item.content"
-                                    :role-id="item.role_id"
-                                    :chat-id="item.chat_id"
+                                    :role-id="item.roleId"
+                                    :chat-id="item.chatId"
                                     :icon="item.icon"
                                     @disable-input="disableInput(true)"
                                     @enable-input="enableInput"
-                                    :created-at="dateFormat(item['created_at'])"/>
+                                    :created-at="dateFormat(item['createdAt'])"/>
                 </div>
               </div><!-- end chat box -->
 
@@ -230,24 +230,7 @@
     >
       <div class="notice">
         <el-text type="primary">
-          注意：当前站点仅为开源项目
-          <a style="color: #F56C6C" href="https://github.com/yangjian102621/chatgpt-plus" target="_blank">ChatPlus</a>
-          的演示项目，本项目单纯就是给大家体验项目功能使用。<br/>
-
-          体验额度用完之后请不要在当前站点进行任何充值操作！！！<br/>
-          体验额度用完之后请不要在当前站点进行任何充值操作！！！<br/>
-          体验额度用完之后请不要在当前站点进行任何充值操作！！！<br/>
-
-          如果觉得好用你就花几分钟自己部署一套，没有API KEY 的同学可以去
-          <a href="https://gpt.bemore.lol" target="_blank"
-             style="font-size: 20px;color:#F56C6C">https://gpt.bemore.lol</a>
-          购买，现在有超级优惠，价格远低于 OpenAI 官方。<br/>
-          GPT-3.5，GPT-4，DALL-E3 绘图......你都可以随意使用，无需魔法。<br/>
-
-          本项目源码地址：
-          <a href="https://github.com/yangjian102621/chatgpt-plus" target="_blank">
-            https://github.com/yangjian102621/chatgpt-plus
-          </a>
+          注意：当前站点为演示站点
         </el-text>
 
         <p style="text-align: right">
@@ -290,8 +273,10 @@ import ConfigDialog from "@/components/ConfigDialog.vue";
 import {checkSession} from "@/action/session";
 import Welcome from "@/components/Welcome.vue";
 import ChatMidJourney from "@/components/ChatMidJourney.vue";
+import TurndownService from 'turndown';
 
-const title = ref('ChatGPT-智能助手');
+
+const title = ref('云之AI');
 const models = ref([])
 const modelID = ref(0)
 const chatData = ref([]);
@@ -340,6 +325,10 @@ onMounted(() => {
           roles.value = res.data;
           roleId.value = roles.value[0]['id'];
           const chatId = localStorage.getItem("chat_id")
+          if(chatId === null && chatList != null && chatList.size > 0) {
+            chatId = chatList[0].chatId ;
+            return
+          }
           const chat = getChatById(chatId)
           if (chat === null) {
             // 创建新的对话
@@ -402,8 +391,10 @@ const resizeElement = function () {
 
 // 新建会话
 const newChat = function () {
+  checkSession().then((user) => {
+    console.info("chatItem=" + JSON.stringify(newChatItem) + "  roles[0]=" + JSON.stringify(roles.value[0])) ;
   // 已有新开的会话
-  if (newChatItem.value !== null && newChatItem.value['role_id'] === roles.value[0]['role_id']) {
+  if (newChatItem.value !== null && newChatItem.value['roleId'] === roles.value[0]['id']) {
     return;
   }
 
@@ -415,11 +406,11 @@ const newChat = function () {
     }
   })
   newChatItem.value = {
-    chat_id: "",
+    chatId: "",
     icon: icon,
-    role_id: roleId.value,
-    model_id: modelID.value,
-    title: '',
+    roleId: roleId.value,
+    modelId: modelID.value,
+    title: '新建会话',
     edit: false,
     removing: false,
   };
@@ -427,25 +418,28 @@ const newChat = function () {
   showStopGenerate.value = false;
   showReGenerate.value = false;
   connect(null, roleId.value)
+
+  }) ;
+
 }
 
 // 切换会话
 const changeChat = (chat) => {
-  localStorage.setItem("chat_id", chat.chat_id)
+  localStorage.setItem("chat_id", chat.chatId)
   loadChat(chat)
 }
 
 const loadChat = function (chat) {
-  if (activeChat.value['chat_id'] === chat.chat_id) {
+  if (activeChat.value['chatId'] === chat.chatId) {
     return;
   }
   activeChat.value = chat
   newChatItem.value = null;
-  roleId.value = chat.role_id;
-  modelID.value = chat.model_id;
+  roleId.value = chat.roleId;
+  modelID.value = chat.modelId;
   showStopGenerate.value = false;
   showReGenerate.value = false;
-  connect(chat.chat_id, chat.role_id)
+  connect(chat.chatId, chat.roleId)
 }
 
 // 编辑会话标题
@@ -472,17 +466,17 @@ const confirm = function (event, chat) {
     if (tmpChatTitle.value === '') {
       return ElMessage.error("请输入会话标题！");
     }
-    if (!chat.chat_id) {
+    if (!chat.chatId) {
       return ElMessage.error("对话 ID 为空，请刷新页面再试！");
     }
-    httpPost('/api/chat/update', {chat_id: chat.chat_id, title: tmpChatTitle.value}).then(() => {
+    httpPost('/api/chat/update', {chatId: chat.chatId, title: tmpChatTitle.value}).then(() => {
       chat.title = tmpChatTitle.value;
       chat.edit = false;
     }).catch(e => {
       ElMessage.error("操作失败：" + e.message);
     })
   } else if (curOpt.value === 'remove') {
-    httpGet('/api/chat/remove?chat_id=' + chat.chat_id).then(() => {
+    httpGet('/api/chat/remove?chat_id=' + chat.chatId).then(() => {
       chatList.value = removeArrayItem(chatList.value, chat, function (e1, e2) {
         return e1.id === e2.id
       })
@@ -541,6 +535,7 @@ const socket = ref(null);
 const activelyClose = ref(false); // 主动关闭
 const canSend = ref(true);
 const connect = function (chat_id, role_id) {
+  console.info("connect(" + chat_id + "," + role_id + ")")
   let isNewChat = false;
   if (!chat_id) {
     isNewChat = true;
@@ -563,7 +558,7 @@ const connect = function (chat_id, role_id) {
       host = 'ws://' + location.host;
     }
   }
-  const _socket = new WebSocket(host + `/api/chat/new?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${modelID.value}&token=${getUserToken()}`);
+  const _socket = new WebSocket(host + `infra/ws/chat?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${modelID.value}&token=${getUserToken()}`);
   _socket.addEventListener('open', () => {
     chatData.value = []; // 初始化聊天数据
     previousText.value = '';
@@ -578,8 +573,8 @@ const connect = function (chat_id, role_id) {
         type: "reply",
         id: randString(32),
         icon: _role['icon'],
-        content: _role['hello_msg'],
-        orgContent: _role['hello_msg'],
+        content: _role['helloMsg'],
+        orgContent: _role['helloMsg'],
       })
       ElMessage.success({message: "对话连接成功！", duration: 1000})
     } else { // 加载聊天记录
@@ -635,7 +630,7 @@ const connect = function (chat_id, role_id) {
           // 追加当前会话到会话列表
           if (isNewChat && newChatItem.value !== null) {
             newChatItem.value['title'] = previousText.value;
-            newChatItem.value['chat_id'] = chat_id;
+            newChatItem.value['chatId'] = chat_id;
             chatList.value.unshift(newChatItem.value);
             activeChat.value = newChatItem.value;
             newChatItem.value = null; // 只追加一次
@@ -646,8 +641,8 @@ const connect = function (chat_id, role_id) {
 
           // 获取 token
           const reply = chatData.value[chatData.value.length - 1]
-          httpPost("/api/chat/tokens", {text: "", model: getModelValue(modelID.value), chat_id: chat_id}).then(res => {
-            reply['created_at'] = new Date().getTime();
+          httpPost("/api/chat/tokens", {text: "", model: getModelValue(modelID.value), chatId: chat_id}).then(res => {
+            reply['createdAt'] = new Date().getTime();
             reply['tokens'] = res.data;
             // 将聊天框的滚动条滑动到最底部
             nextTick(() => {
@@ -861,18 +856,133 @@ const searchChat = function () {
 
 // 导出会话
 const exportChat = () => {
-  if (!activeChat.value['chat_id']) {
+  if (!activeChat.value['chatId']) {
     return ElMessage.error("请先选中一个会话")
   }
 
-  const url = location.protocol + '//' + location.host + '/chat/export?chat_id=' + activeChat.value['chat_id']
+  const url = location.protocol + '//' + location.host + '/chat/export?chat_id=' + activeChat.value['chatId']
   // console.log(url)
   window.open(url, '_blank');
 }
+// function divContentToMarkdown(divContent) {
+//   // Replace <b> tags with ** for bold text in Markdown
+//   divContent = divContent.replace(/<b>(.*?)<\/b>/g, '**$1**');
+
+//   // Replace <i> tags with * for italic text in Markdown
+//   divContent = divContent.replace(/<i>(.*?)<\/i>/g, '*$1*');
+
+//   // Replace <a> tags with []() for links in Markdown
+//   divContent = divContent.replace(/<a href="(.*?)">(.*?)<\/a>/g, '[$2]($1)');
+
+//   // Add more replacements as needed...
+
+//   return divContent;
+// }
+
+
+
+
+function divContentToMarkdown(divContent, baseUrl) {
+  const turndownService = new TurndownService();
+
+  // Create a new DOM parser
+  const parser = new DOMParser();
+
+  // Parse the div content
+  const doc = parser.parseFromString(divContent, 'text/html');
+
+  // Get all img elements
+  const imgElements = doc.getElementsByTagName('img');
+
+  // Loop over the img elements and update the src attribute
+  for (let i = 0; i < imgElements.length; i++) {
+    const img = imgElements[i];
+
+    // Get the current src attribute
+    const src = img.getAttribute('src');
+
+    // If the src is a relative URL, convert it to an absolute URL
+    if (src && !src.startsWith('http')) {
+      img.setAttribute('src', baseUrl + src);
+    }
+  }
+
+  // Convert the updated HTML back to a string
+  const updatedDivContent = doc.body.innerHTML;
+
+  // Convert the HTML to Markdown
+  return turndownService.turndown(updatedDivContent);
+}
+
+// const exportChat = () => {
+//     if (!activeChat.value['chatId']) {
+//       return ElMessage.error("请先选中一个会话")
+//     }
+//     // exportDivToPdf('container', 'chat-' + activeChat.value['chatId'] + '.pdf')
+//     exportChatMarkdown('chat-' + activeChat.value['chatId'] + '.md') ;
+// }
+
+function exportDivToPdf(divId, filename) {
+  // Get the div element
+  const content = document.getElementById(divId);
+
+  const saveStyle = content.style ;
+
+  content.style.width = '210mm';
+  content.style.height = 'auto';
+
+  // Create a new jsPDF instance
+  const pdf = new jsPDF({
+        format: 'a4'
+      });
+      
+  // Add the div to the PDF
+  pdf.html(content, {
+        callback: function (pdf) {
+          // Save the PDF file
+          pdf.save(filename)
+          content.style = saveStyle ;
+        }
+      });
+
+  // Save the PDF
+  // pdf.save(filename);
+}
+
+const exportChatMarkdown = (filename) => {
+    // Get the div content
+    const divContent = document.getElementById('chat-box').innerHTML;
+
+    // Convert the div content to Markdown format
+    // This depends on how your div content is structured
+    const markdownContent = divContentToMarkdown(divContent,location.protocol + '//' + location.host);
+
+    // Create a new Blob object with the Markdown content
+    const blob = new Blob([markdownContent], { type: 'text/markdown' });
+
+    // Create a URL for the Blob object
+    const url = URL.createObjectURL(blob);
+
+    // Create a new 'a' element
+    const a = document.createElement('a');
+
+    // Set the href and download attributes of the 'a' element
+    a.href = url;
+    a.download = filename ;
+
+    // Append the 'a' element to the body
+    document.body.appendChild(a);
+
+    // Simulate a click on the 'a' element
+    a.click();
+
+    // Remove the 'a' element from the body
+    document.body.removeChild(a);
+  }
 
 const getChatById = (chatId) => {
   for (let index in chatList.value) {
-    if (chatList.value[index].chat_id === chatId) {
+    if (chatList.value[index].chatId === chatId) {
       return chatList.value[index]
     }
   }

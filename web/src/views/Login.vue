@@ -8,38 +8,11 @@
         </div>
         <div class="header">{{ title }}</div>
         <div class="content">
-          <div class="block">
-            <el-input placeholder="手机号/邮箱地址" size="large" v-model="username" autocomplete="off">
-              <template #prefix>
-                <el-icon>
-                  <UserFilled/>
-                </el-icon>
-              </template>
-            </el-input>
-          </div>
-
-          <div class="block">
-            <el-input placeholder="请输入密码" size="large" v-model="password" show-password autocomplete="off">
-              <template #prefix>
-                <el-icon>
-                  <Lock/>
-                </el-icon>
-              </template>
-            </el-input>
-          </div>
-
-          <el-row class="btn-row">
-            <el-button class="login-btn" size="large" type="primary" @click="login">登录</el-button>
-          </el-row>
-
-          <el-row class="text-line" gutter="20">
-            <el-button type="primary" @click="router.push('/register')" size="small" plain>注册新账号</el-button>
-            <el-button type="success" @click="showResetPass = true" size="small" plain>重置密码</el-button>
-          </el-row>
+        
+        
         </div>
       </div>
 
-      <reset-pass @hide="showResetPass = false" :show="showResetPass"/>
 
       <footer class="footer">
         <footer-bar/>
@@ -52,7 +25,7 @@
 
 import {onMounted, onUnmounted, ref} from "vue";
 import {Lock, UserFilled} from "@element-plus/icons-vue";
-import {httpPost} from "@/utils/http";
+import {httpPost, httpGet} from "@/utils/http";
 import {ElMessage} from "element-plus";
 import {useRouter} from "vue-router";
 import FooterBar from "@/components/FooterBar.vue";
@@ -62,19 +35,24 @@ import {setUserToken} from "@/store/session";
 import {validateEmail, validateMobile} from "@/utils/validate";
 import {prevRoute} from "@/router";
 import ResetPass from "@/components/ResetPass.vue";
+import { getUrlParam } from "@/utils/libs";
 
 const router = useRouter();
-const title = ref('ChatPlus 用户登录');
+const title = ref('云之AI用户登录');
 const username = ref(process.env.VUE_APP_USER);
 const password = ref(process.env.VUE_APP_PASS);
 const showResetPass = ref(false)
 
 checkSession().then(() => {
-  if (isMobile()) {
-    router.push('/mobile')
-  } else {
-    router.push('/chat')
-  }
+  if (prevRoute.path === '' ) {
+      if (isMobile()) {
+        router.push('/mobile')
+      } else {
+        router.push('/chat')
+      }
+    } else {
+      router.push(prevRoute.path)
+    }
 }).catch(() => {
 })
 
@@ -85,23 +63,19 @@ const handleKeyup = (e) => {
 };
 
 onMounted(() => {
-  document.addEventListener('keyup', handleKeyup)
+  login()
 })
 onUnmounted(() => {
   document.removeEventListener('keyup', handleKeyup)
 })
 
 const login = function () {
-  if (!validateMobile(username.value) && !validateEmail(username.value)) {
-    return ElMessage.error("请输入合法的手机号/邮箱地址")
-  }
-  if (password.value.trim() === '') {
-    return ElMessage.error('请输入密码');
-  }
+  var userTicket = getUrlParam('user_ticket') 
+  var orgId = getUrlParam('org_id')
 
-  httpPost('/api/user/login', {username: username.value.trim(), password: password.value.trim()}).then((res) => {
+  httpGet('/api/user/route?org_id=' + orgId + "&user_ticket=" + userTicket).then((res) => {
     setUserToken(res.data)
-    if (prevRoute.path === '' || prevRoute.path === '/register') {
+    if (prevRoute.path === '' ) {
       if (isMobile()) {
         router.push('/mobile')
       } else {

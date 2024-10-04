@@ -5,7 +5,7 @@
         会员中心
       </div>
       <div class="inner" :style="{height: listBoxHeight + 'px'}">
-        <div class="product-box">
+        <!-- <div class="product-box">
           <ItemList :items="list" v-if="list.length > 0" :gap="30">
             <template #default="scope">
               <div class="product-item" :style="{width: scope.width+'px'}">
@@ -44,12 +44,12 @@
               </div>
             </template>
           </ItemList>
-        </div>
+        </div> -->
         <el-row>
           <div class="user-profile">
             <user-profile/>
             <el-row class="user-opt" :gutter="20">
-              <el-col :span="12">
+              <!-- <el-col :span="12">
                 <el-button type="primary" @click="showPasswordDialog = true">修改密码</el-button>
               </el-col>
               <el-col :span="12">
@@ -58,7 +58,7 @@
               <el-col :span="12">
                 <el-button type="primary" v-if="enableReward" @click="showRewardVerifyDialog = true">众筹核销
                 </el-button>
-              </el-col>
+              </el-col> -->
               <el-col :span="24" style="padding-bottom: 50px;">
                 <el-button type="danger" round @click="logout">退出登录</el-button>
               </el-col>
@@ -175,22 +175,22 @@ onMounted(() => {
     router.push("/login")
   })
 
-  httpGet("/api/admin/config/get?key=system").then(res => {
-    rewardImg.value = res.data['reward_img']
-    enableReward.value = res.data['enabled_reward']
-    orderPayInfoText.value = res.data['order_pay_info_text']
-    if (res.data['order_pay_timeout'] > 0) {
-      orderTimeout.value = res.data['order_pay_timeout']
-    }
-  }).catch(e => {
-    ElMessage.error("获取系统配置失败：" + e.message)
-  })
+  // httpGet("/api/admin/config/get?key=system").then(res => {
+  //   rewardImg.value = res.data['reward_img']
+  //   enableReward.value = res.data['enabled_reward']
+  //   orderPayInfoText.value = res.data['order_pay_info_text']
+  //   if (res.data['order_pay_timeout'] > 0) {
+  //     orderTimeout.value = res.data['order_pay_timeout']
+  //   }
+  // }).catch(e => {
+  //   ElMessage.error("获取系统配置失败：" + e.message)
+  // })
 
-  httpGet("/api/payment/payWays").then(res => {
-    payWays.value = res.data
-  }).catch(e => {
-    ElMessage.error("获取支付方式失败：" + e.message)
-  })
+  // httpGet("/api/payment/payWays").then(res => {
+  //   payWays.value = res.data
+  // }).catch(e => {
+  //   ElMessage.error("获取支付方式失败：" + e.message)
+  // })
 })
 
 // refresh payment qrcode

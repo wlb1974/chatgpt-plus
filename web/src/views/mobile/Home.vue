@@ -1,6 +1,6 @@
 <template>
   <div class="banner">
-    <h1 class="banner-title">ChatPuls-V3 智能助理</h1>
+    <h1 class="banner-title">云之AI</h1>
   </div>
   <van-config-provider theme="dark">
     <div class="mobile-home">
@@ -17,7 +17,7 @@
         <van-tabbar-item to="/mobile/imageSd" name="imageSd" icon="photo-o">绘图</van-tabbar-item>
         <van-tabbar-item to="/mobile/apps" name="apps" icon="apps-o">应用</van-tabbar-item>
         <van-tabbar-item to="/mobile/profile" name="profile" icon="user-o">我的</van-tabbar-item>
-        <van-tabbar-item to="/mobile/invitation" name="invitation" icon="share-o">分享</van-tabbar-item>
+        <!-- <van-tabbar-item to="/mobile/invitation" name="invitation" icon="share-o">分享</van-tabbar-item> -->
       </van-tabbar>
     </div>
   </van-config-provider>

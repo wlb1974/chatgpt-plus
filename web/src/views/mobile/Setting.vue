@@ -58,7 +58,7 @@ onMounted(() => {
   // 获取最新用户信息
   httpGet('/api/user/profile').then(res => {
     form.value = res.data
-    form.value.chat_config.api_keys = res.data.chat_config.api_keys ?? {OpenAI: "", Azure: "", ChatGLM: ""}
+    form.value.chat_config.api_keys = res.data.chatConfig.api_keys ?? {OpenAI: "", Azure: "", ChatGLM: ""}
   }).catch(() => {
     showFailToast('获取用户信息失败')
   });
