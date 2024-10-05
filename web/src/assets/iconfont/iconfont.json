@@ -6,6 +6,202 @@
   "description": "",
   "glyphs": [
     {
+      "icon_id": "12243734",
+      "name": "control",
+      "font_class": "control-simple",
+      "unicode": "e624",
+      "unicode_decimal": 58916
+    },
+    {
+      "icon_id": "6539424",
+      "name": "麦克风",
+      "font_class": "mic-bold",
+      "unicode": "e683",
+      "unicode_decimal": 59011
+    },
+    {
+      "icon_id": "1727442",
+      "name": "213麦克风",
+      "font_class": "mic-thin",
+      "unicode": "e8c2",
+      "unicode_decimal": 59586
+    },
+    {
+      "icon_id": "3730725",
+      "name": "attach-attachment-cl",
+      "font_class": "attachment-cl",
+      "unicode": "e66a",
+      "unicode_decimal": 58986
+    },
+    {
+      "icon_id": "15748474",
+      "name": "st-attachment",
+      "font_class": "attachment-st",
+      "unicode": "e63b",
+      "unicode_decimal": 58939
+    },
+    {
+      "icon_id": "1010",
+      "name": "扬声器",
+      "font_class": "speaker",
+      "unicode": "e607",
+      "unicode_decimal": 58887
+    },
+    {
+      "icon_id": "8094805",
+      "name": "clear",
+      "font_class": "clear",
+      "unicode": "e900",
+      "unicode_decimal": 59648
+    },
+    {
+      "icon_id": "34803640",
+      "name": "论坛",
+      "font_class": "bbs",
+      "unicode": "e623",
+      "unicode_decimal": 58915
+    },
+    {
+      "icon_id": "310708",
+      "name": "license",
+      "font_class": "license",
+      "unicode": "e65a",
+      "unicode_decimal": 58970
+    },
+    {
+      "icon_id": "1421807",
+      "name": "更多",
+      "font_class": "more",
+      "unicode": "e63c",
+      "unicode_decimal": 58940
+    },
+    {
+      "icon_id": "36264781",
+      "name": "MidJourney",
+      "font_class": "mj",
+      "unicode": "e643",
+      "unicode_decimal": 58947
+    },
+    {
+      "icon_id": "37677137",
+      "name": "DALL·E 3",
+      "font_class": "dalle",
+      "unicode": "e646",
+      "unicode_decimal": 58950
+    },
+    {
+      "icon_id": "2629858",
+      "name": "逻辑图",
+      "font_class": "xmind",
+      "unicode": "e610",
+      "unicode_decimal": 58896
+    },
+    {
+      "icon_id": "1061336",
+      "name": "version",
+      "font_class": "version",
+      "unicode": "e68d",
+      "unicode_decimal": 59021
+    },
+    {
+      "icon_id": "3901033",
+      "name": "绘画",
+      "font_class": "sd",
+      "unicode": "e62b",
+      "unicode_decimal": 58923
+    },
+    {
+      "icon_id": "39185683",
+      "name": "绘画",
+      "font_class": "huihua1",
+      "unicode": "e606",
+      "unicode_decimal": 58886
+    },
+    {
+      "icon_id": "2341972",
+      "name": "chat",
+      "font_class": "chat",
+      "unicode": "e68a",
+      "unicode_decimal": 59018
+    },
+    {
+      "icon_id": "8017627",
+      "name": "prompt",
+      "font_class": "prompt",
+      "unicode": "e6ce",
+      "unicode_decimal": 59086
+    },
+    {
+      "icon_id": "1132455",
+      "name": "share-bold",
+      "font_class": "share-bold",
+      "unicode": "e626",
+      "unicode_decimal": 58918
+    },
+    {
+      "icon_id": "7567359",
+      "name": "cancel-share",
+      "font_class": "cancel-share",
+      "unicode": "e682",
+      "unicode_decimal": 59010
+    },
+    {
+      "icon_id": "12600976",
+      "name": "xls",
+      "font_class": "xls",
+      "unicode": "e678",
+      "unicode_decimal": 59000
+    },
+    {
+      "icon_id": "3750429",
+      "name": "file",
+      "font_class": "file",
+      "unicode": "e62f",
+      "unicode_decimal": 58927
+    },
+    {
+      "icon_id": "4318810",
+      "name": "doc",
+      "font_class": "doc",
+      "unicode": "e6c2",
+      "unicode_decimal": 59074
+    },
+    {
+      "icon_id": "4318811",
+      "name": "pdf",
+      "font_class": "pdf",
+      "unicode": "e6c3",
+      "unicode_decimal": 59075
+    },
+    {
+      "icon_id": "4628503",
+      "name": "ppt",
+      "font_class": "ppt",
+      "unicode": "e642",
+      "unicode_decimal": 58946
+    },
+    {
+      "icon_id": "6233095",
+      "name": "txt",
+      "font_class": "txt",
+      "unicode": "e644",
+      "unicode_decimal": 58948
+    },
+    {
+      "icon_id": "12600910",
+      "name": "sql",
+      "font_class": "sql",
+      "unicode": "e65b",
+      "unicode_decimal": 58971
+    },
+    {
+      "icon_id": "31260974",
+      "name": "md",
+      "font_class": "md",
+      "unicode": "e63a",
+      "unicode_decimal": 58938
+    },
+    {
       "icon_id": "1278349",
       "name": "loading",
       "font_class": "loading",

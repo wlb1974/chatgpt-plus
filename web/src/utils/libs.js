@@ -1,6 +1,14 @@
+// * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+// * Copyright 2023 The Geek-AI Authors. All rights reserved.
+// * Use of this source code is governed by a Apache-2.0 license
+// * that can be found in the LICENSE file.
+// * @Author yangjian102621@163.com
+// * +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 /**
  * Util lib functions
  */
+import {showConfirmDialog} from "vant";
 
 // generate a random string
 export function randString(length) {
@@ -159,6 +167,96 @@ export function substr(str, length) {
     }
 
     return result
+}
+
+export function isImage(url) {
+    const expr = /\.(jpg|jpeg|png|gif|bmp|svg)$/i;
+    return expr.test(url);
+}
+
+export function processContent(content) {
+    // 如果是图片链接地址，则直接替换成图片标签
+    const linkRegex = /(https?:\/\/\S+)/g;
+    const links = content.match(linkRegex);
+    if (links) {
+        for (let link of links) {
+            if (isImage(link)) {
+                const index = content.indexOf(link)
+                if (content.substring(index - 1, 2) !== "]") {
+                    content = content.replace(link, "\n![](" + link + ")\n")
+                }
+            }
+        }
+    }
+
+    const lines = content.split("\n")
+    if (lines.length <= 1) {
+        return content
+    }
+    const texts = []
+    // 定义匹配数学公式的正则表达式
+    const formulaRegex = /^\s*[a-z|A-Z]+[^=]+\s*=\s*[^=]+$/;
+    let hasCode = false
+    for (let i = 0; i < lines.length; i++) {
+        // 处理引用块换行
+        if (lines[i].startsWith(">")) {
+            texts.push(lines[i])
+            texts.push("\n")
+            continue
+        }
+        // 如果包含代码块则跳过公式检测
+        if (lines[i].indexOf("```") !== -1) {
+            texts.push(lines[i])
+            hasCode = true
+            continue
+        }
+        // 识别并处理数学公式，需要排除那些已经被识别出来的公式
+        if (i > 0 && formulaRegex.test(lines[i]) && lines[i - 1].indexOf("$$") === -1 && !hasCode) {
+            texts.push("$$")
+            texts.push(lines[i])
+            texts.push("$$")
+            continue
+        }
+        texts.push(lines[i])
+    }
+    return texts.join("\n")
+}
+
+export function processPrompt(prompt) {
+    prompt = prompt.replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+
+    const linkRegex = /(https?:\/\/\S+)/g;
+    const links = prompt.match(linkRegex);
+    if (links) {
+        for (let link of links) {
+            if (isImage(link)) {
+                const index = prompt.indexOf(link)
+                if (prompt.substring(index - 1, 2) !== "]") {
+                    prompt = prompt.replace(link, "\n![](" + link + ")\n")
+                }
+            }
+        }
+    }
+    return prompt
+}
+
+// 判断是否为微信浏览器
+export function isWeChatBrowser() {
+    return /MicroMessenger/i.test( navigator.userAgent);
+}
+
+export function showLoginDialog(router) {
+    showConfirmDialog({
+        title: '登录',
+        message:
+            '此操作需要登录才能进行，前往登录？',
+    }).then(() => {
+        router.push("/login")
+    }).catch(() => {
+        // on cancel
+    });
 }
 
 // 获取URL上的参数

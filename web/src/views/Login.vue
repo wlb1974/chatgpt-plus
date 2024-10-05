@@ -43,18 +43,7 @@ const username = ref(process.env.VUE_APP_USER);
 const password = ref(process.env.VUE_APP_PASS);
 const showResetPass = ref(false)
 
-checkSession().then(() => {
-  if (prevRoute.path === '' ) {
-      if (isMobile()) {
-        router.push('/mobile')
-      } else {
-        router.push('/chat')
-      }
-    } else {
-      router.push(prevRoute.path)
-    }
-}).catch(() => {
-})
+
 
 const handleKeyup = (e) => {
   if (e.key === 'Enter') {
@@ -63,31 +52,53 @@ const handleKeyup = (e) => {
 };
 
 onMounted(() => {
-  login()
+  // 如果router.currentRoute query有user_ticket，则直接登录
+  if (router.currentRoute.value.query.user_ticket) {
+    login()
+  }
+  else {
+    checkSession().then(() => {
+      if (prevRoute.path === '' ) {
+        if (isMobile()) {
+          router.push('/mobile')
+        } else {
+          router.push('/agents')
+        }
+      } else {
+        router.push(prevRoute.path)
+      }
+  }, () => {
+    login()
+  }).catch(() => {
+      login()
+    })
+  }
 })
+
 onUnmounted(() => {
   document.removeEventListener('keyup', handleKeyup)
 })
 
 const login = function () {
-  var userTicket = getUrlParam('user_ticket') 
-  var orgId = getUrlParam('org_id')
+  var userTicket = router.currentRoute.value.query.user_ticket
+  var orgId = router.currentRoute.value.query.org_id
 
-  httpGet('/api/user/route?org_id=' + orgId + "&user_ticket=" + userTicket).then((res) => {
-    setUserToken(res.data)
-    if (prevRoute.path === '' ) {
-      if (isMobile()) {
+  if (userTicket && orgId) {
+    httpGet('/api/user/route?org_id=' + orgId + "&user_ticket=" + userTicket).then((res) => {
+      setUserToken(res.data)  
+      if (prevRoute.path === '' ) {
+        if (isMobile()) {
         router.push('/mobile')
       } else {
-        router.push('/chat')
+        router.push('/agents')
       }
     } else {
-      router.push(prevRoute.path)
-    }
-
-  }).catch((e) => {
+        router.push(prevRoute.path)
+      }
+    }).catch((e) => {
     ElMessage.error('登录失败，' + e.message)
   })
+  }
 }
 
 

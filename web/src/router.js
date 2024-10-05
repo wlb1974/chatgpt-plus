@@ -4,7 +4,7 @@ const routes = [
     {
         name: 'home',
         path: '/',
-        redirect: '/chat',
+        redirect: '/agents',
         meta: {title: '首页'},
         component: () => import('@/views/Home.vue'),
         children: [
@@ -13,6 +13,12 @@ const routes = [
                 path: '/chat',
                 meta: {title: '创作中心'},
                 component: () => import('@/views/ChatPlus.vue'),
+            },
+            {
+                name: 'agent',
+                path: '/agent/chat',
+                meta: {title: '智能体'},
+                component: () => import('@/views/ChatAgent.vue'),
             },
             // {
             //     name: 'image-mj',
@@ -37,6 +43,12 @@ const routes = [
                 path: '/apps',
                 meta: {title: '应用中心'},
                 component: () => import('@/views/ChatApps.vue'),
+            },
+            {
+                name: 'chat-agents',
+                path: '/agents',
+                meta: {title: '应用中心'},
+                component: () => import('@/views/ChatAgents.vue'),
             },
             // {
             //     name: 'images',
