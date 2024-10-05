@@ -1,106 +1,186 @@
-.page-sd {
-  background-color: #282828;
+.mobile-sd {
+  .text-line {
+    padding 0 6px
+    font-size 14px
 
-  .inner {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    .van-row {
+      width 100%
 
-    .sd-box {
-      background-color #282828
-      min-width 92%
-      max-width 92%
-      padding 0px
-      border-radius 0px
-      color #ffffff;
-      font-size 14px
+      .van-col {
+        .rate {
+          display: flex;
+          justify-content center
+          background-color #f5f5f5
+          padding 5px 10px
+          margin 5px 0
+          border-radius 5px
+          flex-flow column
 
-      h2 {
-        font-weight: bold;
-        font-size 16px
-        text-align center
-        color #fff
-      }
+          .icon {
+            text-align center
 
-      // 隐藏滚动条
-
-      ::-webkit-scrollbar {
-        width: 0;
-        height: 0;
-        background-color: transparent;
-      }
-
-      .sd-params {
-        margin-top 10px
-        overflow auto
-
-
-        .param-line {
-          padding 0 10px
-
-          .el-icon {
-            position relative
-            top 3px
-          }
-
-          .el-input__suffix-inner {
-            .el-icon {
-              top 0
+            .van-image {
+              max-width 20px
             }
           }
 
-          .grid-content
-          .form-item-inner {
-            display flex
+          .text {
+            text-align center
+            color #555555
+          }
+        }
 
-            .el-icon {
-              margin-left 10px
-              margin-top 2px
+        .el-input__inner {
+          text-align center
+        }
+
+        .model {
+          display: flex;
+          justify-content center
+          background-color #f5f5f5
+          padding 6px
+          margin 5px 0
+          border-radius 5px
+          flex-flow column
+
+          .icon {
+            text-align center
+
+            .van-image {
+              width 100%
+              height 50px
             }
           }
 
-        }
-
-        .param-line.pt {
-          padding-top 5px
-          padding-bottom 5px
-        }
-      }
-
-      .submit-btn {
-        padding 10px 15px 0 15px
-        text-align center
-
-        .el-button {
-          width 100%
-
-          span {
-            color #2D3A4B
+          .text {
+            text-align center
+            color #555555
           }
+        }
+
+        .active {
+          background-color #e5e5e5
         }
       }
     }
 
-    .el-form {
-      .el-form-item__label {
-        color #ffffff
-      }
-    }
-
-    @import "./task-list.styl"
-  }
-
-  @import "./sd-task-dialog.styl"
-
-
-  .mj-list-item-prompt {
-    .el-icon {
-      margin-left 10px
-      cursor pointer
+    .van-button {
       position relative
-      top 2px
+
+      .van-tag {
+        position absolute
+        right 20px
+      }
+    }
+
+    .align-right {
+      display flex
+      justify-content right
     }
   }
 
-}
 
+  color var(--van-text-color)
+  
+  .pt-6 {
+    padding 15px 10px
+  }
+
+  .tip-text {
+    padding 10px
+    line-height 1.5
+    color #c1c1c1
+  }
+
+  .running-job-list {
+    .van-grid {
+      .van-grid-item {
+        .van-grid-item__content {
+          padding 0
+          position relative
+
+          .van-image, .task-in-queue {
+            min-height 100px
+          }
+
+          .progress {
+            display flex
+            justify-content center
+            align-items center
+            width 100%
+            height 100%
+            background rgba(50, 50, 50, 0.5)
+            position absolute
+            left 0
+            top 0
+
+            .van-circle__text {
+              color #ffffff
+            }
+          }
+
+          // end progress
+
+          .task-in-queue {
+            display flex
+            flex-flow column
+            justify-content center
+            color #c1c1c1
+
+            .icon {
+              text-align center
+
+              .iconfont {
+                font-size 24px
+              }
+            }
+
+            .text {
+              font-size 14px
+              margin-top 5px
+            }
+          }
+        }
+      }
+    }
+  }
+
+  //end running jobs
+
+  .finish-job-list {
+    .van-grid {
+      .van-grid-item {
+        .van-grid-item__content {
+          padding 0
+
+          .job-item {
+            overflow hidden
+            border-radius 6px
+            position relative
+            height 100%
+            width 100%
+
+            .van-image {
+              width 100%
+              height 200px
+            }
+
+            .remove {
+              position absolute
+              right 5px
+              top 5px
+
+              .el-button {
+                margin-left 5px
+                height auto
+                padding 5px
+              }
+            }
+          }
+
+
+        }
+      }
+    }
+  }
+}

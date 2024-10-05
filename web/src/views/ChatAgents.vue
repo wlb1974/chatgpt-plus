@@ -1,27 +1,52 @@
 <template>
-    <div class="page-apps custom-scroll">
-      <div class="title">
-        云之AI助手应用中心
-      </div>
-      <div class="inner" :style="{height: listBoxHeight + 'px'}">
-        <ItemList :items="list" v-if="list.length > 0" :gap="20" :width="250">
-          <template #default="scope">
-            <div class="app-item" 
-                 :style="{width: scope.width+'px'}" 
-                 @click="goToChat(scope.item.id)">
-              <el-image :src="scope.item.icon" fit="cover" :style="{height: scope.width+'px'}"/>
-              <div class="title">
-                <span class="name">{{ scope.item.name }}</span>
-              </div>
-              <div class="hello-msg" ref="elements">{{ scope.item.intro }}</div>
-            </div>
-          </template>
-        </ItemList>
-      </div>
+    <div>
+      <div class="page-apps custom-scroll">
+        <div class="inner" :style="{height: listBoxHeight + 'px'}">
+          <ItemList :items="list" v-if="list.length > 0" :gap="15" :width="300">
+            <template #default="scope">
+              <div class="item"  @click="goToChat(scope.item.id)" style="width: 100%;">
+                <div class="image">
+                  <el-image :src="scope.item.icon" fit="cover"/>
+                </div>
   
-      <login-dialog :show="showLoginDialog" @hide="getRoles"/>
+                <div class="inner">
+                  <div class="info">
+                    <div class="info-title">{{ scope.item.name }}</div>
+                    <div class="info-text">{{ scope.item.helloMsg }}</div>
+                  </div>
+                </div>
+  
+  
+              </div>
+              <!--            <div class="app-item">-->
+              <!--              <el-image :src="scope.item.icon" fit="cover"/>-->
+              <!--              <div class="title">-->
+              <!--                <span class="name">{{ scope.item.name }}</span>-->
+              <!--                <div class="opt">-->
+              <!--                  <div v-if="hasRole(scope.item.key)">-->
+              <!--                    <el-button size="small" type="success" @click="useRole(scope.item)">使用</el-button>-->
+              <!--                    <el-button size="small" type="danger" @click="updateRole(scope.item,'remove')">移除</el-button>-->
+              <!--                  </div>-->
+              <!--                  <el-button v-else size="small"-->
+              <!--                             style="&#45;&#45;el-color-primary:#009999"-->
+              <!--                             @click="updateRole(scope.item, 'add')">-->
+              <!--                    <el-icon>-->
+              <!--                      <Plus/>-->
+              <!--                    </el-icon>-->
+              <!--                    <span>添加应用</span>-->
+              <!--                  </el-button>-->
+              <!--                </div>-->
+              <!--              </div>-->
+              <!--              <div class="hello-msg" ref="elements">{{ scope.item.intro }}</div>-->
+              <!--            </div>-->
+            </template>
+          </ItemList>
+        </div>
+      </div>
     </div>
   </template>
+
+
   
   <script setup>
   import {onMounted, ref} from "vue"
@@ -41,7 +66,7 @@
   const elements = ref(null)
   const router = useRouter()
   onMounted(() => {
-    httpGet("/api/role/list?all=true").then((res) => {
+    httpGet("/api/role/list").then((res) => {
       const items = res.data
       // 处理 hello message
       for (let i = 0; i < items.length; i++) {
@@ -62,6 +87,10 @@
       roles.value = JSON.parse(user.chatRolesJson)
     }).catch(() => {
     })
+  }
+
+  const hasRole = (roleKey) => {
+    return arrayContains(roles.value, roleKey, (v1, v2) => v1 === v2)
   }
 
   const goToChat = (roleId) => {
