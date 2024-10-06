@@ -1,6 +1,6 @@
 <template>
   <div class="home">
-    <div class="header">
+    <div class="header" v-if="showTitle">
       <div class="banner">
         <div class="logo">
           <el-image :src="logo" @click="router.push('/')"/>
@@ -114,12 +114,26 @@ const mainNavs = ref([])
 const moreNavs = ref([])
 const curPath = ref(router.currentRoute.value.path)
 const title = ref("")
-const mainWinHeight = window.innerHeight - 50
+
 const loginUser = ref({})
 const version = ref(process.env.VUE_APP_VERSION)
 const routerViewKey = ref(0)
 const showConfigDialog = ref(false)
 const licenseConfig = ref({})
+const showTitle = ref(true); // 默认值为true
+
+// 从URL参数中读取showTitle
+const urlShowTitle = router.currentRoute.value.query.showTitle;
+if (urlShowTitle !== undefined) {
+  showTitle.value = urlShowTitle === 'true'; // 将字符串转换为布尔值
+} else {
+  const localStorageShowTitle = sessionStorage.getItem('showTitle');
+  showTitle.value = localStorageShowTitle !== null ? localStorageShowTitle === 'true' : true; // 从localStorage读取
+}
+sessionStorage.setItem('showTitle', showTitle.value);
+
+// 减去顶部导航栏和底部导航栏的高度
+const mainWinHeight = window.innerHeight - (showTitle.value?50:0) - 1 
 
 const store = useSharedStore();
 const show = ref(false)
@@ -129,7 +143,7 @@ watch(() => store.showLoginDialog, (newValue) => {
 
 mainNavs.value = [
 {url: "/agents", icon_path: "/images/menu/app.png", name: "应用中心", title: "应用中心"},
-{url: "/agent/chat", icon_path : "/images/chat.png", name: "对话聊天", title: "对话聊天"},
+{url: "/agent/chat", icon_path : "/images/menu/chat.png", name: "对话聊天", title: "对话聊天"},
   // {path: "/chat", icon_path: "/images/chat.png", title: "对话聊天"},
   // {path: "/mj", icon_path: "/images/mj.png", title: "MJ 绘画"},
   // {path: "/sd", icon_path: "/images/sd.png", title: "SD 绘画"},
@@ -150,7 +164,7 @@ const changeNav = (item) => {
     router.push({name: 'ExternalLink', query: {url: item.url}})
   } else {
     title.value = item.title ;
-    router.push(item.url)
+    router.replace(item.url)
   }
 }
 

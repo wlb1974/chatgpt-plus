@@ -7,9 +7,9 @@
 
       <div class="chat-item">
         <div class="content" v-html="content"></div>
-        <div class="bar" v-if="createdAt !== ''">
+        <div class="bar" v-if="createdAt">
           <span class="bar-item"><el-icon><Clock/></el-icon> {{ createdAt }}</span>
-          <span class="bar-item" v-if="type === 'reply'">tokens: {{ finalTokens }}</span>
+          <!--          <span class="bar-item">Tokens: {{ finalTokens }}</span>-->
         </div>
       </div>
     </div>
@@ -54,9 +54,10 @@ export default defineComponent({
     }
   },
   mounted() {
-    if ('prompt' === this.type && !this.finalTokens) {
+    if (!this.finalTokens) {
       httpPost("/api/chat/tokens", {text: this.content, model: this.model}).then(res => {
         this.finalTokens = res.data;
+      }).catch(() => {
       })
     }
   }
@@ -90,6 +91,7 @@ export default defineComponent({
     }
 
     .chat-item {
+      width 100%
       position: relative;
       padding: 0 5px 0 0;
       overflow: hidden;
@@ -101,6 +103,17 @@ export default defineComponent({
         font-size: var(--content-font-size);
         border-radius: 5px;
         overflow: auto;
+
+        img {
+          max-width: 600px;
+          border-radius: 10px;
+          margin 10px 0
+        }
+
+
+        a {
+          color #20a0ff
+        }
 
         p {
           line-height 1.5

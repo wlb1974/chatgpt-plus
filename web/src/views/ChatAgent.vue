@@ -22,13 +22,13 @@
             </div>
   
             <div class="content" :style="{height: leftBoxHeight+'px'}">
-              <el-row v-for="chat in chatList" :key="chat.chat_id">
-                <div :class="chat.chat_id === activeChat.chat_id?'chat-list-item active':'chat-list-item'"
+              <el-row v-for="chat in chatList" :key="chat.chatId">
+                <div :class="chat.chatId === activeChat.chatId?'chat-list-item active':'chat-list-item'"
                      @click="changeChat(chat)">
                   <el-image :src="chat.icon" class="avatar"/>
                   <span class="chat-title-input" v-if="chat.edit">
                     <el-input v-model="tmpChatTitle" size="small" @keydown="titleKeydown($event, chat)"
-                              :id="'chat-'+chat.chat_id"
+                              :id="'chat-'+chat.chatId"
                               @blur="editConfirm(chat)"
                               @click="stopPropagation($event)"
                               placeholder="请输入标题"/>
@@ -96,7 +96,7 @@
                     <chat-prompt
                         v-if="item.type==='prompt'"
                         :icon="item.icon"
-                        :created-at="dateFormat(item['created_at'])"
+                        :created-at="dateFormat(item['createdAt'])"
                         :tokens="item['tokens']"
                         :model="getModelValue(modelID)"
                         :content="item.content"/>
@@ -216,12 +216,15 @@
   const router = useRouter();
   const showConfigDialog = ref(false);
   const isLogin = ref(false)
-  const showHello = ref(true)
+  const showHello = ref(false)
   const textInput = ref(null)
   const showFeedbackDialog = ref(false)
   const showDemoNotice = ref(false)
   const showNoticeKey = ref("SHOW_DEMO_NOTICE_")
-  
+  const inputRef = ref(null)
+  const textHeightRef = ref(null)
+  const row = ref(1)
+
   const query = ref(router.currentRoute.value.query);
   if (isMobile()) {
     router.replace("/mobile")
@@ -242,7 +245,7 @@
       loginUser.value = user
       isLogin.value = true
       // 获取会话列表
-      httpGet("/api/chat/list?user_id=" + loginUser.value.id + "&role_id=" + role).then((res) => {
+      httpGet("/api/chat/list?user_id=" + loginUser.value.id + "&roleId=" + role).then((res) => {
         if (res.data) {
           chatList.value = res.data;
           allChats.value = res.data;
@@ -309,10 +312,18 @@
   }
   
   const resizeElement = function () {
-    chatBoxHeight.value = window.innerHeight - 51 - 82 - 38;
-    mainWinHeight.value = window.innerHeight - 51;
-    leftBoxHeight.value = window.innerHeight - 43 - 47 - 45;
-  };
+    var showTitle = sessionStorage.getItem('showTitle');
+    if (showTitle === 'true') {
+      chatBoxHeight.value = window.innerHeight - 1 - 101 - 82 - 38;
+      mainWinHeight.value = window.innerHeight - 1 - 101;
+      leftBoxHeight.value = window.innerHeight - 1 - 90 - 45 - 82;
+    } else {
+      chatBoxHeight.value = window.innerHeight + 50 - 1 - 101 - 82 - 38 ;
+      mainWinHeight.value = window.innerHeight + 50 - 1 - 101 ;
+      leftBoxHeight.value = window.innerHeight + 50 - 1 - 90 - 45 - 82 ;
+    }
+    
+};
   
   // 新建会话
   const newChat = function () {
@@ -359,6 +370,10 @@
   }
   
   const loadChat = function (chat) {
+    if (!isLogin.value) {
+    store.setShowLoginDialog(true)
+    return;
+  }
     if (activeChat.value['chatId'] === chat.chatId) {
       return;
     }
@@ -373,64 +388,77 @@
   
   // 编辑会话标题
   const curOpt = ref('')
-  const tmpChatTitle = ref('');
-  const editChatTitle = function (event, chat) {
-    event.stopPropagation();
-    chat.edit = true;
-    curOpt.value = 'edit';
-    tmpChatTitle.value = chat.title;
-  };
+// 编辑会话标题
+const tmpChatTitle = ref('');
+const editChatTitle = (chat) => {
+  chat.edit = true;
+  tmpChatTitle.value = chat.title;
+  console.log(chat.chatId)
+  nextTick(() => {
+    document.getElementById('chat-' + chat.chatId).focus()
+  })
+};
   
   
   const titleKeydown = (e, chat) => {
-    if (e.keyCode === 13) {
-      e.stopPropagation();
-      confirm(e, chat)
-    }
+  if (e.keyCode === 13) {
+    e.stopPropagation();
+    editConfirm(chat)
   }
-  // 确认修改
-  const confirm = function (event, chat) {
-    event.stopPropagation();
-    if (curOpt.value === 'edit') {
-      if (tmpChatTitle.value === '') {
-        return ElMessage.error("请输入会话标题！");
-      }
-      if (!chat.chatId) {
-        return ElMessage.error("对话 ID 为空，请刷新页面再试！");
-      }
-      httpPost('/api/chat/update', {chatId: chat.chatId, title: tmpChatTitle.value}).then(() => {
-        chat.title = tmpChatTitle.value;
-        chat.edit = false;
-      }).catch(e => {
-        ElMessage.error("操作失败：" + e.message);
-      })
-    } else if (curOpt.value === 'remove') {
-      httpGet('/api/chat/remove?chat_id=' + chat.chatId).then(() => {
-        chatList.value = removeArrayItem(chatList.value, chat, function (e1, e2) {
-          return e1.id === e2.id
-        })
-        // 重置会话
-        newChat();
-      }).catch(e => {
-        ElMessage.error("操作失败：" + e.message);
-      })
-  
-    }
-  
+}
+
+const stopPropagation = (e) => {
+  e.stopPropagation();
+}
+// 确认修改
+const editConfirm = function (chat) {
+  if (tmpChatTitle.value === '') {
+    return ElMessage.error("请输入会话标题！");
   }
-  // 取消修改
-  const cancel = function (event, chat) {
-    event.stopPropagation();
+  if (!chat.chatId) {
+    return ElMessage.error("对话 ID 为空，请刷新页面再试！");
+  }
+  if (tmpChatTitle.value === chat.title) {
     chat.edit = false;
-    chat.removing = false;
+    return
   }
-  
-  // 删除会话
-  const removeChat = function (event, chat) {
-    event.stopPropagation();
-    chat.removing = true;
-    curOpt.value = 'remove';
-  }
+
+  httpPost('/api/chat/update', {chatId: chat.chatId, title: tmpChatTitle.value}).then(() => {
+    chat.title = tmpChatTitle.value;
+    chat.edit = false;
+  }).catch(e => {
+    ElMessage.error("操作失败：" + e.message);
+  })
+
+}
+// 删除会话
+const removeChat = function (chat) {
+  ElMessageBox.confirm(
+      `该操作会删除"${chat.title}"`,
+      '删除聊天',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning',
+      }
+  )
+      .then(() => {
+        httpGet('/api/chat/remove?chatId=' + chat.chatId).then(() => {
+          chatList.value = removeArrayItem(chatList.value, chat, function (e1, e2) {
+            return e1.id === e2.id
+          })
+          // 重置会话
+          newChat();
+        }).catch(e => {
+          ElMessage.error("操作失败：" + e.message);
+        })
+      })
+      .catch(() => {
+      })
+
+}
+
+
   
   const mathjaxPlugin = require('markdown-it-mathjax3')
 const md = require('markdown-it')({
@@ -469,6 +497,8 @@ md.use(mathjaxPlugin)
   const socket = ref(null);
   const activelyClose = ref(false); // 主动关闭
   const canSend = ref(true);
+  const heartbeatHandle = ref(null)
+
   const connect = function (chat_id, role_id) {
     console.info("connect(" + chat_id + "," + role_id + ")")
     let isNewChat = false;
@@ -498,6 +528,20 @@ md.use(mathjaxPlugin)
         host = 'ws://' + location.host;
       }
     }
+
+      // 心跳函数
+  const sendHeartbeat = () => {
+    clearTimeout(heartbeatHandle.value)
+    new Promise((resolve, reject) => {
+      if (socket.value !== null) {
+        socket.value.send(JSON.stringify({type: "heartbeat", content: "ping"}))
+      }
+      resolve("success")
+    }).then(() => {
+      heartbeatHandle.value = setTimeout(() => sendHeartbeat(), 10000)
+    });
+  }
+
     const _socket = new WebSocket(host + `infra/ws/chat?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${modelID.value}&token=${getUserToken()}`);
     _socket.addEventListener('open', () => {
       chatData.value = []; // 初始化聊天数据
@@ -508,8 +552,8 @@ md.use(mathjaxPlugin)
       if (isNewChat) { // 加载打招呼信息
         loading.value = false;
         chatData.value.push({
-          chat_id: chat_id,
-          role_id: role_id,
+          chatId: chat_id,
+          roleId: role_id,
           type: "reply",
           id: randString(32),
           icon: _role['icon'],
@@ -520,6 +564,8 @@ md.use(mathjaxPlugin)
       } else { // 加载聊天记录
         loadChatHistory(chat_id);
       }
+
+      sendHeartbeat()
   
     });
   
@@ -535,7 +581,8 @@ md.use(mathjaxPlugin)
               id: randString(32),
               icon: _role['icon'],
               content: "",
-              created_at: new Date().getTime(),
+              createdAt: new Date().getTime(),
+              prompt: previousText.value,
             });
           } else if (data.type === "mj") {
             disableInput(true)
@@ -567,7 +614,12 @@ md.use(mathjaxPlugin)
               });
             }
   
-          } else if (data.type === 'end') { // 消息接收完毕
+          } 
+          else if(data.type === 'clear'){
+            chatData.value = chatData.value.slice(0, -1);
+            console.log('清除会话');
+          }
+          else if (data.type === 'end') { // 消息接收完毕
             // 追加当前会话到会话列表
             if (isNewChat && newChatItem.value !== null) {
               newChatItem.value['title'] = previousText.value;
@@ -587,11 +639,20 @@ md.use(mathjaxPlugin)
               reply['tokens'] = res.data;
               // 将聊天框的滚动条滑动到最底部
               nextTick(() => {
-                document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+                try {
+                  document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+                  localStorage.setItem("chat_id", chat_id)
+                } catch (e) {
+                  console.log("scroll error: " + e)
+                }
               })
             })
   
-          } else {
+          } else if (data.type === 'heartbeat') {
+            // 心跳包
+            return ;
+          }
+          else {
             lineBuffer.value += data.content;
             const reply = chatData.value[chatData.value.length - 1]
             reply['orgContent'] = lineBuffer.value;
@@ -600,9 +661,14 @@ md.use(mathjaxPlugin)
           }
           // 将聊天框的滚动条滑动到最底部
           nextTick(() => {
-            document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
-            localStorage.setItem("chat_id", chat_id)
+            try {
+              document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+              localStorage.setItem("chat_id", chat_id)
+            } catch (e) {
+              console.log("scroll error: " + e)
+            }
           })
+
         };
       }
   
@@ -673,16 +739,21 @@ md.use(mathjaxPlugin)
       id: randString(32),
       icon: loginUser.value.avatar,
       content: md.render(prompt.value),
-      created_at: new Date().getTime(),
+      createdAt: new Date().getTime(),
     });
   
     nextTick(() => {
-      document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+      try { 
+        document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+      } catch (e) {
+        console.log("scroll error: " + e)
+      }
     })
   
     showHello.value = false
     disableInput(false)
-    socket.value.send(prompt.value);
+    socket.value.send(JSON.stringify({type: "chat", content: prompt.value}));
+    // socket.value.send(prompt.value);
     previousText.value = prompt.value;
     prompt.value = '';
     return true;
@@ -728,6 +799,31 @@ md.use(mathjaxPlugin)
     })
   }
   
+  const onInput = (e) => {
+  // 根据输入的内容自动计算输入框的行数
+  const lineHeight = parseFloat(window.getComputedStyle(inputRef.value).lineHeight)
+  textHeightRef.value.style.width = inputRef.value.clientWidth + 'px'; // 设定宽度和 textarea 相同
+  const lines = Math.floor(textHeightRef.value.clientHeight / lineHeight);
+  inputRef.value.scrollTo(0, inputRef.value.scrollHeight)
+  if (prompt.value.length < 10) {
+    row.value = 1
+  } else if (lines <= 7){
+    row.value = lines
+  } else {
+    row.value = 7
+  }
+
+  // 输入回车自动提交
+  if (e.keyCode === 13) {
+    if (e.ctrlKey) { // Ctrl + Enter 换行
+      prompt.value += "\n";
+      return;
+    }
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
   const loadChatHistory = function (chatId) {
     httpGet('/api/chat/history?chat_id=' + chatId).then(res => {
       const data = res.data
@@ -737,20 +833,20 @@ md.use(mathjaxPlugin)
       }
       showHello.value = false
       for (let i = 0; i < data.length; i++) {
-        if (data[i].type === "mj") {
-          data[i].content = JSON.parse(data[i].content)
-          data[i].content.html = md.render(data[i].content?.content)
+          data[i].orgContent = data[i].content;
+          data[i].content = md.render(processContent(data[i].content))
+          if (i > 0 && data[i].type === 'reply') {
+            data[i].prompt = data[i - 1].orgContent
+          }
           chatData.value.push(data[i]);
-          continue;
-        }
-  
-        data[i].orgContent = data[i].content;
-        data[i].content = md.render(processContent(data[i].content));
-        chatData.value.push(data[i]);
       }
   
       nextTick(() => {
-        document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+        try {
+          document.getElementById('chat-box').scrollTo(0, document.getElementById('chat-box').scrollHeight)
+        } catch (e) {
+          console.log("scroll error: " + e)
+        }
       })
       loading.value = false
     }).catch(e => {
@@ -766,27 +862,86 @@ md.use(mathjaxPlugin)
     })
   }
   
-  // 重新生成
-  const reGenerate = function () {
-    disableInput(false)
-    const text = '重新生成上述问题的答案：' + previousText.value;
-    // 追加消息
-    chatData.value.push({
-      type: "prompt",
-      id: randString(32),
-      icon: loginUser.value.avatar,
-      content: md.render(text)
-    });
-    socket.value.send(text);
-  }
+//   // 重新生成
+//   const reGenerate = function () {
+//     disableInput(false)
+//     const text = '重新生成上述问题的答案：' + previousText.value;
+//     // 追加消息
+//     chatData.value.push({
+//       type: "prompt",
+//       id: randString(32),
+//       icon: loginUser.value.avatar,
+//       content: md.render(text)
+//     });
+//     socket.value.send(text);
+//   }
   
-  const chatName = ref('')
-  // 搜索会话
-  const searchChat = function () {
-    if (chatName.value === '') {
-      chatList.value = allChats.value
+  // 重新生成
+const reGenerate = function (prompt) {
+    if (canSend.value === false) {
+      ElMessage.warning("AI 正在作答中，请稍后...");
       return
     }
+    // prompt 为定义
+    if (prompt === undefined) {
+      return ;
+    }
+
+    // prompt 包含了 重新生成 字样
+    if (prompt.includes('重新生成下面问题的答案：')) {
+      prompt = prompt.replace('重新生成下面问题的答案：', '')
+    }
+
+  disableInput(false)
+
+  const text = '重新生成下面问题的答案：' + prompt;
+  previousText.value = prompt;
+
+  // 追加消息
+  chatData.value.push({
+    type: "prompt",
+    id: randString(32),
+    icon: loginUser.value.avatar,
+    content: md.render(text)
+  });
+  socket.value.send(JSON.stringify({type: "chat", content: prompt}));
+}
+
+  // 导出会话
+const shareChat = (chat) => {
+  if (!chat.chatId) {
+    return ElMessage.error("请先选中一个会话")
+  }
+
+  const url = location.protocol + '//' + location.host + '/chat/export?chatId=' + chat.chatId
+  // console.log(url)
+  window.open(url, '_blank');
+}
+
+//   const chatName = ref('')
+//   // 搜索会话
+//   const searchChat = function () {
+//     if (chatName.value === '') {
+//       chatList.value = allChats.value
+//       return
+//     }
+//     const items = [];
+//     for (let i = 0; i < allChats.value.length; i++) {
+//       if (allChats.value[i].title.toLowerCase().indexOf(chatName.value.toLowerCase()) !== -1) {
+//         items.push(allChats.value[i]);
+//       }
+//     }
+//     chatList.value = items;
+//   }
+  
+  const chatName = ref('')
+// 搜索会话
+const searchChat = function (e) {
+  if (chatName.value === '') {
+    chatList.value = allChats.value
+    return
+  }
+  if (e.keyCode === 13) {
     const items = [];
     for (let i = 0; i < allChats.value.length; i++) {
       if (allChats.value[i].title.toLowerCase().indexOf(chatName.value.toLowerCase()) !== -1) {
@@ -795,7 +950,8 @@ md.use(mathjaxPlugin)
     }
     chatList.value = items;
   }
-  
+}
+
   // 导出会话
   const exportChat = () => {
     if (!activeChat.value['chatId']) {
@@ -949,4 +1105,37 @@ md.use(mathjaxPlugin)
   
   <style scoped lang="stylus">
   @import "@/assets/css/chat-plus.styl"
+  </style>
+  
+  <style lang="stylus">
+  .notice-dialog {
+    .el-dialog__header {
+      padding-bottom 0
+    }
+  
+    .el-dialog__body {
+      padding 0 20px
+  
+      ol, ul {
+        padding-left 10px
+      }
+  
+      ol {
+        list-style decimal-leading-zero
+        padding-left 20px
+      }
+  
+      ul {
+        list-style disc
+      }
+    }
+  }
+  
+  .input-container {
+    .el-textarea {
+      .el-textarea__inner {
+        padding-right 40px
+      }
+    }
+  }
   </style>
