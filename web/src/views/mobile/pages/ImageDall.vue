@@ -4,93 +4,53 @@
       <van-cell-group inset>
         <div>
           <van-field
-              v-model="params.sampler"
+              v-model="quality"
               is-link
-              readonly
-              label="采样方法"
-              placeholder="选择采样方法"
-              @click="showSamplerPicker = true"
+              label="图片质量"
+              placeholder="选择图片质量"
+              @click="showQualityPicker = true"
           />
-          <van-popup v-model:show="showSamplerPicker" position="bottom" teleport="#app">
+          <van-popup v-model:show="showQualityPicker" position="bottom" teleport="#app">
             <van-picker
-                :columns="samplers"
-                @cancel="showSamplerPicker = false"
-                @confirm="samplerConfirm"
+                :columns="qualities"
+                @cancel="showQualityPicker = false"
+                @confirm="qualityConfirm"
             />
           </van-popup>
         </div>
 
-        <van-field label="图片尺寸">
-          <template #input>
-            <van-row gutter="20">
-              <van-col span="12">
-                <el-input v-model="params.width" size="small" placeholder="宽"/>
-              </van-col>
-              <van-col span="12">
-                <el-input v-model="params.height" size="small" placeholder="高"/>
-              </van-col>
-            </van-row>
-          </template>
-        </van-field>
-
-        <van-field v-model.number="params.steps" label="迭代步数"
-                   placeholder="">
-          <template #right-icon>
-            <van-icon name="info-o"
-                      @click="showInfo('值越大则代表细节越多，同时也意味着出图速度越慢，一般推荐20-30')"/>
-          </template>
-        </van-field>
-        <van-field v-model.number="params.cfg_scale" label="引导系数" placeholder="">
-          <template #right-icon>
-            <van-icon name="info-o"
-                      @click="showInfo('提示词引导系数，图像在多大程度上服从提示词，较低值会产生更有创意的结果')"/>
-          </template>
-        </van-field>
-        <van-field v-model.number="params.seed" label="随机因子" placeholder="">
-          <template #right-icon>
-            <van-icon name="info-o"
-                      @click="showInfo('随机数种子，相同的种子会得到相同的结果，设置为 -1 则每次随机生成种子')"/>
-          </template>
-        </van-field>
-
-        <van-field label="高清修复">
-          <template #input>
-            <van-switch v-model="params.hd_fix"/>
-          </template>
-        </van-field>
-
-        <div v-if="params.hd_fix">
-          <div>
-            <van-field
-                v-model="params.hd_scale_alg"
-                is-link
-                readonly
-                label="放大算法"
-                placeholder="选择放大算法"
-                @click="showUpscalePicker = true"
+        <div>
+          <van-field
+              v-model="size"
+              is-link
+              label="图片尺寸"
+              placeholder="选择图片尺寸"
+              @click="showSizePicker = true"
+          />
+          <van-popup v-model:show="showSizePicker" position="bottom" teleport="#app">
+            <van-picker
+                :columns="sizes"
+                @cancel="showSizePicker = false"
+                @confirm="sizeConfirm"
             />
-            <van-popup v-model:show="showUpscalePicker" position="bottom" teleport="#app">
-              <van-picker
-                  :columns="upscaleAlgArr"
-                  @cancel="showUpscalePicker = false"
-                  @confirm="upscaleConfirm"
-              />
-            </van-popup>
-          </div>
+          </van-popup>
+        </div>
 
-          <van-field v-model.number="params.hd_scale" label="放大倍数"/>
-          <van-field v-model.number="params.hd_steps" label="迭代步数"/>
-
-          <van-field label="重绘幅度">
-            <template #input>
-              <van-slider v-model.number="params.hd_redraw_rate" :max="1" :step="0.1"
-                          @update:model-value="showToast('当前值：' + params.hd_redraw_rate)"/>
-            </template>
-            <template #right-icon>
-              <van-icon name="info-o"
-                        @click="showInfo('决定算法对图像内容的影响程度，较大的值将得到越有创意的图像')"/>
-            </template>
-          </van-field>
+        <div>
+          <van-field
+              v-model="style"
+              is-link
+              label="图片样式"
+              placeholder="选择图片样式"
+              @click="showStylePicker = true"
+          />
+          <van-popup v-model:show="showStylePicker" position="bottom" teleport="#app">
+            <van-picker
+                :columns="styles"
+                @cancel="showStylePicker = false"
+                @confirm="styleConfirm"
+            />
+          </van-popup>
         </div>
 
         <van-field
@@ -101,20 +61,8 @@
             placeholder="请在此输入绘画提示词，系统会自动翻译中文提示词，高手请直接输入英文提示词"
         />
 
-        <van-collapse v-model="activeColspan">
-          <van-collapse-item title="反向提示词" name="neg_prompt">
-            <van-field
-                v-model="params.neg_prompt"
-                rows="3"
-                autosize
-                type="textarea"
-                placeholder="不想出现在图片上的元素(例如：树，建筑)"
-            />
-          </van-collapse-item>
-        </van-collapse>
-
         <div class="text-line pt-6">
-          <el-tag>绘图消耗{{ sdPower }}算力，当前算力：{{ power }}</el-tag>
+          <el-tag>绘图消耗{{ dallPower }}算力，当前算力：{{ power }}</el-tag>
         </div>
 
         <div class="text-line">
@@ -198,7 +146,7 @@
                 <el-button type="success" v-else @click="publishImage($event, item, true)" circle>
                   <i class="iconfont icon-share-bold"></i>
                 </el-button>
-                <el-button type="primary" @click="showTask(item)" circle>
+                <el-button type="primary" @click="showPrompt(item)" circle>
                   <i class="iconfont icon-prompt"></i>
                 </el-button>
               </div>
@@ -208,7 +156,7 @@
       </van-list>
 
     </div>
-
+    <button style="display: none" class="copy-prompt-dall" :data-clipboard-text="prompt" id="copy-btn-dall">复制</button>
   </div>
 </template>
 
@@ -221,19 +169,19 @@ import {checkSession} from "@/action/session";
 import {useRouter} from "vue-router";
 import {getSessionId} from "@/store/session";
 import {
-  showConfirmDialog, showDialog,
+  showConfirmDialog,
+  showDialog,
   showFailToast,
   showImagePreview,
   showNotify,
   showSuccessToast,
   showToast
 } from "vant";
+import {showLoginDialog} from "@/utils/libs";
 
 const listBoxHeight = ref(window.innerHeight - 40)
 const mjBoxHeight = ref(window.innerHeight - 150)
-const showTaskDialog = ref(false)
 const item = ref({})
-const showLoginDialog = ref(false)
 const isLogin = ref(false)
 const activeColspan = ref([""])
 
@@ -241,51 +189,40 @@ window.onresize = () => {
   listBoxHeight.value = window.innerHeight - 40
   mjBoxHeight.value = window.innerHeight - 150
 }
-const samplers = ref([
-  {text: "Euler a", value: "Euler a"},
-  {text: "DPM++ 2S a Karras", value: "DPM++ 2S a Karras"},
-  {text: "DPM++ 2M Karras", value: "DPM++ 2M Karras"},
-  {text: "DPM++ 2M SDE Karras", value: "DPM++ 2M SDE Karras"},
-  {text: "DPM++ 2M Karras", value: "DPM++ 2M Karras"},
-  {text: "DPM++ 3M SDE Karras", value: "DPM++ 3M SDE Karras"},
-])
-const showSamplerPicker = ref(false)
 
-const upscaleAlgArr = ref([
-  {text: "Latent", value: "Latent"},
-  {text: "ESRGAN_4x", value: "ESRGAN_4x"},
-  {text: "ESRGAN 4x+", value: "ESRGAN 4x+"},
-  {text: "SwinIR_4x", value: "SwinIR_4x"},
-  {text: "LDSR", value: "LDSR"},
-])
-const showUpscalePicker = ref(false)
-
+const qualities = [
+  {text: "标准", value: "standard"},
+  {text: "高清", value: "hd"},
+]
+const sizes = [
+  {text:"1024x1024",value:"1024x1024"},
+  {text:"1792x1024",value:"1792x1024"},
+  {text: "1024x1792",value:"1024x1792"},
+]
+const styles = [
+  {text: "生动", value: "vivid"},
+  {text: "自然", value: "natural"}
+]
 const params = ref({
-  width: 1024,
-  height: 1024,
-  sampler: samplers.value[0].value,
-  seed: -1,
-  steps: 20,
-  cfg_scale: 7,
-  hd_fix: false,
-  hd_redraw_rate: 0.7,
-  hd_scale: 2,
-  hd_scale_alg: upscaleAlgArr.value[0].value,
-  hd_steps: 0,
-  prompt: "",
-  neg_prompt: "nsfw, paintings,low quality,easynegative,ng_deepnegative ,lowres,bad anatomy,bad hands,bad feet",
+  quality: qualities[0].value,
+  size: sizes[0].value,
+  style: styles[0].value,
+  prompt: ""
 })
+const quality = ref(qualities[0].text)
+const size = ref(sizes[0].text)
+const style = ref(styles[0].text)
+
+const showQualityPicker = ref(false)
+const showStylePicker = ref(false)
+const showSizePicker = ref(false)
+
 
 const runningJobs = ref([])
 const finishedJobs = ref([])
 const router = useRouter()
-// 检查是否有画同款的参数
-const _params = router.currentRoute.value.params["copyParams"]
-if (_params) {
-  params.value = JSON.parse(_params)
-}
 const power = ref(0)
-const sdPower = ref(0) // 画一张 SD 图片消耗算力
+const dallPower = ref(0) // 画一张 DALL 图片消耗算力
 
 const socket = ref(null)
 const userId = ref(0)
@@ -313,7 +250,7 @@ const connect = () => {
     });
   }
 
-  const _socket = new WebSocket(host + `/api/sd/client?user_id=${userId.value}`);
+  const _socket = new WebSocket(host + `/api/dall/client?user_id=${userId.value}`);
   _socket.addEventListener('open', () => {
     socket.value = _socket;
 
@@ -338,19 +275,19 @@ const connect = () => {
 }
 
 const clipboard = ref(null)
+const prompt = ref('')
 onMounted(() => {
   initData()
-  clipboard.value = new Clipboard('.copy-prompt-sd');
+  clipboard.value = new Clipboard(".copy-prompt-dall");
   clipboard.value.on('success', () => {
-    showNotify({type: "success", message: "复制成功！"});
+    showNotify({type: 'success', message: '复制成功', duration: 1000})
   })
-
   clipboard.value.on('error', () => {
-    showNotify({type: "danger", message: '复制失败！'});
+    showNotify({type: 'danger', message: '复制失败', duration: 2000})
   })
 
   httpGet("/api/config/get?key=system").then(res => {
-    sdPower.value = res.data["sd_power"]
+    dallPower.value = res.data.dall_power
   }).catch(e => {
     showNotify({type: "danger", message: "获取系统配置失败：" + e.message})
   })
@@ -358,7 +295,10 @@ onMounted(() => {
 
 onUnmounted(() => {
   clipboard.value.destroy()
-  socket.value = null
+  if (socket.value !== null) {
+    socket.value.close()
+    socket.value = null
+  }
 })
 
 
@@ -377,7 +317,7 @@ const initData = () => {
 
 const fetchRunningJobs = () => {
   // 获取运行中的任务
-  httpGet(`/api/sd/jobs?status=0`).then(res => {
+  httpGet(`/api/dall/jobs?status=0`).then(res => {
     const jobs = res.data
     const _jobs = []
     for (let i = 0; i < jobs.length; i++) {
@@ -386,7 +326,7 @@ const fetchRunningJobs = () => {
           message: `任务ID：${jobs[i]['task_id']} 原因：${jobs[i]['err_msg']}`,
           type: 'danger',
         })
-        power.value += sdPower.value
+        power.value += dallPower.value
         continue
       }
       _jobs.push(jobs[i])
@@ -405,7 +345,7 @@ const pageSize = ref(10)
 // 获取已完成的任务
 const fetchFinishJobs = (page) => {
   loading.value = true
-  httpGet(`/api/sd/jobs?status=1&page=${page}&page_size=${pageSize.value}`).then(res => {
+  httpGet(`/api/dall/jobs?status=1&page=${page}&page_size=${pageSize.value}`).then(res => {
     if (res.data.length < pageSize.value) {
       finished.value = true
     }
@@ -429,36 +369,38 @@ const onLoad = () => {
 // 创建绘图任务
 const promptRef = ref(null)
 const generate = () => {
+  if (!isLogin.value) {
+    return showLoginDialog(router)
+  }
+
   if (params.value.prompt === '') {
     promptRef.value.focus()
     return showToast("请输入绘画提示词！")
   }
 
-  if (!isLogin.value) {
-    showLoginDialog.value = true
-    return
-  }
-
-  if (params.value.seed === '') {
+  if (!params.value.seed) {
     params.value.seed = -1
   }
   params.value.session_id = getSessionId()
-  httpPost("/api/sd/image", params.value).then(() => {
+  httpPost("/api/dall/image", params.value).then(() => {
     showSuccessToast("绘画任务推送成功，请耐心等待任务执行...")
-    power.value -= sdPower.value
+    power.value -= dallPower.value
   }).catch(e => {
     showFailToast("任务推送失败：" + e.message)
   })
 }
 
-const showTask = (row) => {
-  item.value = row
-  showTaskDialog.value = true
-}
-
-const copyParams = (row) => {
-  params.value = row.params
-  showTaskDialog.value = false
+const showPrompt = (item) => {
+  prompt.value = item.prompt
+  showConfirmDialog({
+    title: "绘画提示词",
+    message: item.prompt,
+    confirmButtonText: "复制",
+    cancelButtonText: "关闭",
+  }).then(() => {
+    document.querySelector('#copy-btn-dall').click()
+  }).catch(() => {
+  });
 }
 
 const removeImage = (event, item) => {
@@ -468,7 +410,7 @@ const removeImage = (event, item) => {
     message:
         '此操作将会删除任务和图片，继续操作码?',
   }).then(() => {
-    httpPost("/api/sd/remove", {id: item.id, img_url: item.img_url, user_id: userId.value}).then(() => {
+    httpPost("/api/dall/remove", {id: item.id, img_url: item.img_url, user_id: userId.value}).then(() => {
       showSuccessToast("任务删除成功")
     }).catch(e => {
       showFailToast("任务删除失败：" + e.message)
@@ -485,7 +427,7 @@ const publishImage = (event, item, action) => {
   if (action === false) {
     text = "取消发布"
   }
-  httpPost("/api/sd/publish", {id: item.id, action: action}).then(() => {
+  httpPost("/api/dall/publish", {id: item.id, action: action}).then(() => {
     showSuccessToast(text + "成功")
     item.publish = action
   }).catch(e => {
@@ -498,14 +440,22 @@ const imageView = (item) => {
 }
 
 
-const samplerConfirm = (item) => {
-  params.value.sampler = item.selectedOptions[0].text;
-  showSamplerPicker.value = false
+const qualityConfirm = (item) => {
+  params.value.quality = item.selectedOptions[0].value;
+  quality.value = item.selectedOptions[0].text
+  showQualityPicker.value = false
 }
 
-const upscaleConfirm = (item) => {
-  params.value.hd_scale_alg = item.selectedOptions[0].text;
-  showUpscalePicker.value = false
+const styleConfirm = (item) => {
+  params.value.style = item.selectedOptions[0].value;
+  style.value = item.selectedOptions[0].text
+  showStylePicker.value = false
+}
+
+const sizeConfirm =(item) => {
+  params.value.size = item.selectedOptions[0].value
+  size.value=item.selectedOptions[0].text
+  showSizePicker.value =false
 }
 
 const showInfo = (message) => {

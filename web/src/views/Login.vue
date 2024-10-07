@@ -86,7 +86,8 @@ const login = function () {
   if (userTicket && orgId) {
     httpGet('/api/user/route?org_id=' + orgId + "&user_ticket=" + userTicket).then((res) => {
       setUserToken(res.data)  
-      if (prevRoute.path === '' ) {
+      console.log('prevRoute.path', prevRoute.path)
+      if (prevRoute.path === '' || prevRoute.path === '/login' || prevRoute.path === '/') {
         if (isMobile()) {
         router.push('/mobile')
       } else {

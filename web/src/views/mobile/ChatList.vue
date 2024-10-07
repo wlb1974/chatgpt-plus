@@ -1,10 +1,10 @@
 <template>
   <div class="app-background">
-    <div v-if="isLogin" class="container mobile-chat-list">
+    <div class="container mobile-chat-list">
       <van-nav-bar
           :title="title"
           left-text="新建会话"
-          @click-left="showPicker = true"
+          @click-left="newChat"
           custom-class="navbar"
       >
         <template #right>
@@ -33,7 +33,7 @@
             <van-cell @click="changeChat(item)">
               <div class="chat-list-item">
                 <van-image
-                    :src=getIcon(item.roleId)
+                    :src="item.icon"
                     round
                 />
                 <div class="van-ellipsis">{{ item.title }}</div>
@@ -82,8 +82,7 @@ import {httpGet, httpPost} from "@/utils/http";
 import {showConfirmDialog, showFailToast, showSuccessToast} from "vant";
 import {checkSession} from "@/action/session";
 import {router} from "@/router";
-import {setChatConfig} from "@/store/chat";
-import {removeArrayItem} from "@/utils/libs";
+import {removeArrayItem, showLoginDialog} from "@/utils/libs";
 
 const title = ref("会话列表")
 const chatName = ref("")
@@ -101,77 +100,92 @@ const columns = ref([roles.value, models.value])
 const showEditChat = ref(false)
 const item = ref({})
 const tmpChatTitle = ref("")
+const roleId = ref(0) 
 
 checkSession().then((user) => {
   loginUser.value = user
   isLogin.value = true
   // 加载角色列表
-  httpGet(`/api/role/list?user_id=${user.id}`).then((res) => {
-    if (res.data) {
-      const items = res.data
-      for (let i = 0; i < items.length; i++) {
-        // console.log(items[i])
-        roles.value.push({
-          text: items[i].name,
-          value: items[i].id,
-          icon: items[i].icon,
-          helloMsg: items[i].helloMsg
-        })
-      }
-    }
-  }).catch(() => {
-    showFailToast("加载聊天角色失败")
-  })
-
+  // httpGet(`/api/role/list?user_id=${user.id}`).then((res) => {
+  //   if (res.data) {
+  //     const items = res.data
+  //     for (let i = 0; i < items.length; i++) {
+  //       // console.log(items[i])
+  //       roles.value.push({
+  //         text: items[i].name,
+  //         value: items[i].id,
+  //         icon: items[i].icon,
+  //         helloMsg: items[i].helloMsg
+  //       })
+  //     }
+  //   }
+  // }).catch(() => {
+  //   showFailToast("加载聊天角色失败")
+  // })
 
   // 加载模型
-  httpGet('/api/model/list?enable=1').then(res => {
-    if (res.data) {
-      const items = res.data
-      for (let i = 0; i < items.length; i++) {
-        models.value.push({text: items[i].name, value: items[i].id})
-      }
-    }
-  }).catch(e => {
-    showFailToast("加载模型失败: " + e.message)
-  })
+  // httpGet('/api/model/list?enable=1').then(res => {
+  //   if (res.data) {
+  //     const items = res.data
+  //     for (let i = 0; i < items.length; i++) {
+  //       models.value.push({text: items[i].name, value: items[i].id})
+  //     }
+  //   }
+  // }).catch(e => {
+  //   showFailToast("加载模型失败: " + e.message)
+  // })
 
 }).catch(() => {
-  router.push("/login")
+  loading.value = false
+  finished.value = true
+
+  // 加载角色列表
+  // httpGet('/api/role/list').then((res) => {
+  //   if (res.data) {
+  //     const items = res.data
+  //     for (let i = 0; i < items.length; i++) {
+  //       // console.log(items[i])
+  //       roles.value.push({
+  //         text: items[i].name,
+  //         value: items[i].id,
+  //         icon: items[i].icon,
+  //         helloMsg: items[i].hello_msg
+  //       })
+  //     }
+  //   }
+  // }).catch(() => {
+  //   showFailToast("加载聊天角色失败")
+  // })
+
+  // // 加载模型
+  // httpGet('/api/model/list').then(res => {
+  //   if (res.data) {
+  //     const items = res.data
+  //     for (let i = 0; i < items.length; i++) {
+  //       models.value.push({text: items[i].name, value: items[i].id})
+  //     }
+  //   }
+  // }).catch(e => {
+  //   showFailToast("加载模型失败: " + e.message)
+  // })
 })
 
 const onLoad = () => {
-  httpGet("/api/chat/list?user_id=" + loginUser.value.id).then((res) => {
-    if (res.data) {
-      chats.value = res.data;
-      allChats.value = res.data;
-      finished.value = true
-    }
-    loading.value = false;
-  }).catch(() => {
-    error.value = true
-    showFailToast("加载会话列表失败")
+  checkSession().then(() => {
+    roleId.value = sessionStorage.getItem('role_id')
+    httpGet("/api/chat/list?roleId=" + roleId.value).then((res) => {
+      if (res.data) {
+        chats.value = res.data;
+        allChats.value = res.data;
+        finished.value = true
+      }
+      loading.value = false;
+    }).catch(() => {
+      error.value = true
+      showFailToast("加载会话列表失败")
+    })
   })
 };
-
-const getModelValue = (model_id) => {
-  for (let i = 0; i < models.value.length; i++) {
-    if (models.value[i].value === model_id) {
-      return models.value[i].text
-    }
-  }
-  return ""
-}
-
-
-const getIcon = (roleId) => {
-    for (let i = 0; i < roles.value.length; i++) {
-      if (roles.value[i].value === roleId) {
-        return roles.value[i].icon
-      }
-    }
-    return ""
-  }
 
 const search = () => {
   if (chatName.value === '') {
@@ -188,6 +202,10 @@ const search = () => {
 }
 
 const clearAllChatHistory = () => {
+  if (!isLogin.value) {
+    return showLoginDialog(router)
+  }
+
   showConfirmDialog({
     title: '操作提示',
     message: '确定要删除所有的会话记录吗？'
@@ -204,46 +222,28 @@ const clearAllChatHistory = () => {
 }
 
 const newChat = (item) => {
+  if (!isLogin.value) {
+    return showLoginDialog(router)
+  }
   showPicker.value = false
-  const options = item.selectedOptions
-  setChatConfig({
-    role: {
-      id: options[0].value,
-      name: options[0].text,
-      icon: options[0].icon,
-      helloMsg: options[0].helloMsg
-    },
-    model: options[1].value,
-    modelValue: getModelValue(options[1].value),
-    title: '新建会话',
-    chatId: 0
-  })
-  console.info("newChat: " + json.stringify(getChatConfig()))
-  router.push('/mobile/chat/session')
+
+  router.go(-1) ;
+  setTimeout(() => {
+    router.replace(`/mobile/chat/session?role_id=${roleId.value}`)
+  }, 100);
+
+  // const options = item.selectedOptions
+  // router.push({
+  //   name: "mobile-chat-session",
+  //   params: {role_id: roleId.value, model_id: '', title: '新建会话', chat_id: 0}
+  // })
 }
 
 const changeChat = (chat) => {
-  console.info('changeChat: ' + JSON.stringify(chat))
-  let role = {}
-  for (let i = 0; i < roles.value.length; i++) {
-    if (roles.value[i].value === chat.roleId) {
-      role = roles.value[i]
-      break
-    }
-  }
-  setChatConfig({
-    role: {
-      id: chat.roleId,
-      name: role.text,
-      icon: role.icon
-    },
-    model: chat.modelId,
-    modelValue: getModelValue(chat.modelId),
-    title: chat.title,
-    chatId: chat.chatId,
-    helloMsg: role.helloMsg,
-  })
-  router.push('/mobile/chat/session')
+  router.go(-1) ;
+  setTimeout(() => {
+    router.replace(`/mobile/chat/session?chat_id=${chat.chatId}&role_id=${chat.roleId}`)
+  }, 100);
 }
 
 const editChat = (row) => {
@@ -261,7 +261,7 @@ const saveTitle = () => {
 }
 
 const removeChat = (item) => {
-  httpGet('/api/chat/remove?chat_id=' + item.chatId).then(() => {
+  httpGet('/api/chat/remove?chat_id=' + item.chat_id).then(() => {
     chats.value = removeArrayItem(chats.value, item, function (e1, e2) {
       return e1.id === e2.id
     })

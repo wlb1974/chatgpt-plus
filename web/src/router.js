@@ -185,34 +185,49 @@ const routes = [
         name: 'mobile',
         path: '/mobile',
         meta: {title: '云之AI助手'},
-        component: () => import('@/views/mobile/Home.vue'),
-        redirect: '/mobile/chat/list',
+        component: () => import('@/views/mobile/MobileHome.vue'),
+        redirect: '/mobile/apps',
         children: [
-            {
-                path: '/mobile/chat/list',
-                name: 'mobile-chat-list',
-                component: () => import('@/views/mobile/ChatList.vue'),
-            },
-            {
-                path: '/mobile/imageSd',
-                name: 'mobile-imageSd',
-                component: () => import('@/views/mobile/ImageSd.vue'),
-            },
             {
                 path: '/mobile/apps',
                 name: 'mobile-apps',
                 component: () => import('@/views/mobile/Apps.vue'),
             },
             {
+                path: '/mobile/index',
+                name: 'mobile-index',
+                component: () => import('@/views/mobile/Index.vue'),
+            },
+            {
+                path: '/mobile/chat',
+                name: 'mobile-chat',
+                component: () => import('@/views/mobile/ChatList.vue'),
+            },
+            {
+                path: '/mobile/image',
+                name: 'mobile-image',
+                component: () => import('@/views/mobile/Image.vue'),
+            },
+            {
                 path: '/mobile/profile',
                 name: 'mobile-profile',
                 component: () => import('@/views/mobile/Profile.vue'),
             },
-            // {
-            //     path: '/mobile/invitation',
-            //     name: 'mobile-invitation',
-            //     component: () => import('@/views/mobile/Invitation.vue'),
-            // },
+            {
+                path: '/mobile/imgWall',
+                name: 'mobile-img-wall',
+                component: () => import('@/views/mobile/pages/ImgWall.vue'),
+            },
+            {
+                path: '/mobile/chat/session',
+                name: 'mobile-chat-session',
+                component: () => import('@/views/mobile/ChatSession.vue'),
+            },
+            {
+                path: '/mobile/chat/export',
+                name: 'mobile-chat-export',
+                component: () => import('@/views/mobile/ChatExport.vue'),
+            },
         ]
     },
     {
@@ -238,7 +253,7 @@ const router = createRouter({
 let prevRoute = null
 // dynamic change the title when router change
 router.beforeEach((to, from, next) => {
-    console.log('router change', to,'-->', from)
+    console.log('router change', from,'-->', to)
     if (to.meta.title) {
         document.title = `${to.meta.title} | ${process.env.VUE_APP_TITLE}`
     }

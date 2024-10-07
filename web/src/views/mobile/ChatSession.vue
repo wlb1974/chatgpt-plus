@@ -1,101 +1,130 @@
 <template>
   <div class="app-background">
-    <van-config-provider theme="dark">
-      <div class="mobile-chat" v-loading="loading" element-loading-text="正在连接会话...">
-        <van-sticky ref="navBarRef" :offset-top="0" position="top">
-          <van-nav-bar left-arrow left-text="返回" @click-left="router.back()">
-            <template #title>
-              <van-dropdown-menu>
-                <van-dropdown-item :title="title">
-                  <van-cell center title="角色"> {{ role.name }}</van-cell>
-                  <van-cell center title="模型">{{ modelValue }}</van-cell>
-                </van-dropdown-item>
-              </van-dropdown-menu>
-            </template>
+    <div class="mobile-chat" v-loading="loading" element-loading-text="正在连接会话...">
+      <van-nav-bar ref="navBarRef">
+        <template #title>
+          <van-dropdown-menu>
+            <van-dropdown-item :title="title">
+              <van-cell center title="角色"> {{ role.name }}</van-cell>
+            </van-dropdown-item>
+          </van-dropdown-menu>
+        </template>
+        <template #left>
+          <span class="setting">
+            <van-icon name="setting-o" @click="goChatList"/>
+          </span>
+        </template>
+        <template #right>
+          <van-icon name="share-o" @click="showShare = true"/>
+        </template>
 
-            <template #right>
-              <van-icon name="share-o" @click="showShare = true"/>
-            </template>
+      </van-nav-bar>
 
-          </van-nav-bar>
-        </van-sticky>
+      <van-share-sheet
+          v-model:show="showShare"
+          title="立即分享给好友"
+          :options="shareOptions"
+          @select="shareChat"
+      />
 
-        <van-share-sheet
-            v-model:show="showShare"
-            title="立即分享给好友"
-            :options="shareOptions"
-            @select="shareChat"
-        />
-
-        <div class="chat-list-wrapper">
-          <div id="message-list-box" :style="{height: winHeight + 'px'}" class="message-list-box">
-            <van-list
-                v-model:error="error"
-                :finished="finished"
-                error-text="请求失败，点击重新加载"
-                @load="onLoad"
-            >
-              <van-cell v-for="item in chatData" :key="item" :border="false" class="message-line">
-                <chat-prompt
-                    v-if="item.type==='prompt'"
-                    :content="item.content"
-                    :created-at="dateFormat(item['createdAt'])"
-                    :icon="item.icon"
-                    :model="model"
-                    :tokens="item['tokens']"/>
-                <chat-reply v-else-if="item.type==='reply'"
-                            :content="item.content"
-                            :created-at="dateFormat(item['createdAt'])"
-                            :icon="item.icon"
-                            :org-content="item.orgContent"
-                            :tokens="item['tokens']"/>
-                <chat-mid-journey v-else-if="item.type==='mj'"
-                                  :content="item.content"
-                                  :icon="item.icon"
-                                  :role-id="role"
-                                  :chat-id="chatId"
-                                  @disable-input="disableInput(true)"
-                                  @enable-input="enableInput"
-                                  :created-at="dateFormat(item['createdAt'])"/>
-              </van-cell>
-            </van-list>
-          </div>
-        </div>
-        <div class="chat-box-wrapper">
-          <van-sticky ref="bottomBarRef" :offset-bottom="0" position="bottom">
-
-            <van-cell-group inset>
-              <van-field
-                  v-model="prompt"
-                  center
-                  clearable
-                  placeholder="输入你的问题"
-              >
-                <template #button>
-                  <van-button size="small" type="primary" @click="sendMessage">发送</van-button>
-                </template>
-                <template #extra>
-                  <div class="icon-box">
-                    <van-icon v-if="showStopGenerate" name="stop-circle-o" @click="stopGenerate"/>
-                    <van-icon v-if="showReGenerate" name="play-circle-o" @click="reGenerate"/>
-                  </div>
-                </template>
-              </van-field>
-            </van-cell-group>
-
-          </van-sticky>
+      <div class="chat-list-wrapper">
+        <div id="message-list-box" :style="{height: winHeight + 'px'}" class="message-list-box">
+          <van-list
+              v-model:error="error"
+              :finished="finished"
+              error-text="请求失败，点击重新加载"
+              @load="onLoad"
+          >
+            <van-cell v-for="item in chatData" :key="item" :border="false" class="message-line">
+              <chat-prompt
+                  v-if="item.type==='prompt'"
+                  :content="item.content"
+                  :icon="item.icon"/>
+              <chat-reply v-else-if="item.type==='reply'"
+                          :content="item.content"
+                          :icon="item.icon"
+                          :org-content="item.orgContent"/>
+            </van-cell>
+          </van-list>
         </div>
       </div>
-    </van-config-provider>
+
+
+      <div class="chat-box-wrapper">
+        <van-sticky ref="bottomBarRef" :offset-bottom="0" position="bottom">
+          <van-cell-group inset>
+            <van-field
+                v-model="prompt"
+                center
+                clearable
+                placeholder="输入你的问题"
+            >
+              <!--              <template #left-icon>-->
+              <!--                <van-button round type="success" class="button-voice" @click="inputVoice">-->
+              <!--                  <el-icon>-->
+              <!--                    <Microphone/>-->
+              <!--                  </el-icon>-->
+              <!--                </van-button>-->
+              <!--              </template>-->
+
+              <template #button>
+                <van-button size="small" type="primary" @click="sendMessage">发送</van-button>
+              </template>
+              <template #extra>
+                <div class="icon-box">
+                  <van-icon v-if="showStopGenerate" name="stop-circle-o" @click="stopGenerate"/>
+                  <van-icon v-if="showReGenerate" name="play-circle-o" @click="reGenerate"/>
+                </div>
+              </template>
+            </van-field>
+          </van-cell-group>
+        </van-sticky>
+      </div>
+    </div>
+
+    <button id="copy-link-btn" style="display: none;" :data-clipboard-text="url">复制链接地址</button>
+
+    <!--    <van-overlay :show="showMic" z-index="100">-->
+    <!--      <div class="mic-wrapper">-->
+    <!--        <div class="image">-->
+    <!--          <van-image-->
+    <!--              width="100"-->
+    <!--              height="100"-->
+    <!--              src="/images/mic.gif"-->
+    <!--          />-->
+    <!--        </div>-->
+    <!--        <van-button type="success" @click="stopVoice">说完了</van-button>-->
+    <!--      </div>-->
+    <!--    </van-overlay>-->
   </div>
+
+  <van-popup v-model:show="showPicker" position="bottom" class="popup">
+    <van-picker
+        :columns="columns"
+        title="选择模型和角色"
+        @cancel="showPicker = false"
+        @confirm="newChat"
+    >
+      <template #option="item">
+        <div class="picker-option">
+          <van-image
+              v-if="item.icon"
+              :src="item.icon"
+              fit="cover"
+              round
+          />
+          <span>{{ item.text }}</span>
+        </div>
+      </template>
+    </van-picker>
+  </van-popup>
 </template>
 
 <script setup>
-import {nextTick, onMounted, ref} from "vue";
-import {showToast} from "vant";
-import {useRouter} from "vue-router";
-import {dateFormat, randString, renderInputText, UUID} from "@/utils/libs";
-import {getChatConfig} from "@/store/chat";
+import {nextTick, onMounted, onUnmounted, ref, watch} from "vue";
+import {showImagePreview, showNotify, showToast} from "vant";
+import {onBeforeRouteLeave, useRouter, useRoute} from "vue-router";
+import {processContent, randString, renderInputText, UUID} from "@/utils/libs";
 import {httpGet} from "@/utils/http";
 import hl from "highlight.js";
 import 'highlight.js/styles/a11y-dark.css'
@@ -103,45 +132,28 @@ import ChatPrompt from "@/components/mobile/ChatPrompt.vue";
 import ChatReply from "@/components/mobile/ChatReply.vue";
 import {getSessionId, getUserToken} from "@/store/session";
 import {checkSession} from "@/action/session";
-import {getMobileTheme} from "@/store/system";
-import ChatMidJourney from "@/components/mobile/ChatMidJourney.vue";
-
-import QRCode from "qrcode";
-import {ElMessage} from "element-plus";
 import Clipboard from "clipboard";
-import InviteList from "@/components/InviteList.vue";
+import {showLoginDialog} from "@/utils/dialog";
 
 const winHeight = ref(0)
 const navBarRef = ref(null)
 const bottomBarRef = ref(null)
 const router = useRouter()
 
-const chatConfig = getChatConfig()
-const role = chatConfig.role
-const model = chatConfig.model
-const modelValue = chatConfig.modelValue
-const title = chatConfig.title
-const chatId = chatConfig.chatId
+const roles = ref([])
+const roleId = ref(parseInt(router.currentRoute.value.query["role_id"]))
+const role = ref({})
+const models = ref([])
+const modelId = ref(parseInt(router.currentRoute.value.query["model_id"]))
+const modelValue = ref("")
+const title = ref(router.currentRoute.value.query["title"])
+const chatId = ref(router.currentRoute.value.query["chat_id"])
 const loginUser = ref(null)
+// const showMic = ref(false)
+const showPicker = ref(false)
+const columns = ref([roles.value, models.value])
 
-const listBoxHeight = window.innerHeight
-const inviteURL = ref("")
-const qrImg = ref("")
-const inviteChatCalls = ref(0)
-const inviteImgCalls = ref(0)
-const hits = ref(0)
-const regNum = ref(0)
-const rate = ref(0)
-const isLogin = ref(false)
-
-onMounted(() => {
-  winHeight.value = document.body.offsetHeight - navBarRef.value.$el.offsetHeight - bottomBarRef.value.$el.offsetHeight
-})
-
-const chatData = ref([])
-const loading = ref(false)
-const finished = ref(false)
-const error = ref(false)
+sessionStorage.setItem('role_id', roleId.value)
 
 checkSession().then(user => {
   loginUser.value = user
@@ -149,47 +161,183 @@ checkSession().then(user => {
   router.push('/login')
 })
 
-const onLoad = () => {
-  httpGet('/api/chat/history?chat_id=' + chatId).then(res => {
-    // 加载状态结束
-    finished.value = true;
-    const data = res.data
-    if (data && data.length > 0) {
-      const md = require('markdown-it')({breaks: true});
-      for (let i = 0; i < data.length; i++) {
-        if (data[i].type === "prompt") {
-          chatData.value.push(data[i]);
-          continue;
-        } else if (data[i].type === "mj") {
-          data[i].content = JSON.parse(data[i].content)
-          data[i].content.html = md.render(data[i].content?.content)
-          chatData.value.push(data[i]);
-          continue;
-        }
+if (chatId.value) {
+  httpGet(`/api/chat/detail?chat_id=${chatId.value}`).then(res => {
+    title.value = res.data.title
+    modelId.value = res.data.modelId
+    roleId.value = res.data.roleId
+  }).catch(() => {
+  })
+} else {
+  title.value = "新建对话"
+}
 
-        data[i].orgContent = data[i].content;
-        data[i].content = md.render(data[i].content);
-        chatData.value.push(data[i]);
-      }
 
-      nextTick(() => {
-        hl.configure({ignoreUnescapedHTML: true})
-        const blocks = document.querySelector("#message-list-box").querySelectorAll('pre code');
-        blocks.forEach((block) => {
-          hl.highlightElement(block)
-        })
-
-        scrollListBox()
-      })
+  // 加载角色列表
+  httpGet(`/api/role/list`).then((res) => {
+    roles.value = res.data;
+    if (!roleId.value) {
+      roleId.value = roles.value[0]['id']
+    }
+    // build data for role picker
+    for (let i = 0; i < roles.value.length; i++) {
+      roles.value[i].text = roles.value[i].name
+      roles.value[i].value = roles.value[i].id
+      roles.value[i].helloMsg = roles.value[i].helloMsg
     }
 
-    // 连接会话
-    connect(chatId, role.id);
-  }).catch(() => {
-    error.value = true
+    role.value = getRoleById(roleId.value)
+    columns.value = [roles.value, models.value]
+    // 新建对话
+    if (!chatId.value) {
+      connect(chatId.value, roleId.value, modelId.value)
+    }
+  }).catch((e) => {
+    showNotify({type: "danger", message: '获取聊天角色失败: ' + e.messages})
   })
 
+const url = ref(location.protocol + '//' + location.host + '/mobile/chat/export?chat_id=' + chatId.value)
+
+onMounted(() => {
+  console.log('window.innerHeight=' + window.innerHeight + ' navBarRef=' + navBarRef.value.$el.offsetHeight + ' buttomBarRef=' + bottomBarRef.value.$el.offsetHeight)
+  winHeight.value = window.innerHeight - navBarRef.value.$el.offsetHeight - bottomBarRef.value.$el.offsetHeight - 70
+  if ("1" === sessionStorage.getItem("no_bottom_navigator_bar")) {
+    winHeight.value += 70 - 26 ;
+  }
+
+  console.log('onMounted', router.currentRoute.value)
+  chatId.value = route.query.chat_id
+  if(route.query.role_id) { 
+    roleId.value = parseInt(route.query.role_id)
+    role.value = getRoleById(roleId.value)
+  }
+
+  const clipboard = new Clipboard(".content-mobile,.copy-code-mobile,#copy-link-btn");
+  clipboard.on('success', (e) => {
+    e.clearSelection()
+    showNotify({type: 'success', message: '复制成功', duration: 1000})
+  })
+  clipboard.on('error', () => {
+    showNotify({type: 'danger', message: '复制失败', duration: 2000})
+  })
+})
+
+onUnmounted(() => {
+  if (socket.value !== null) {
+    socket.value.close()
+    socket.value = null
+  }
+})
+
+const route = useRoute()
+
+// 监听路由参数变化
+watch(() => route.params, () => {
+
+  console.log('watch', route.query)
+
+  chatId.value = route.query.chat_id
+  if(route.query.role_id) {
+    roleId.value = parseInt(route.query.role_id)
+    role.value = getRoleById(roleId.value)
+  }
+
+  onLoad()
+});
+
+const newChat = (item) => {
+  showPicker.value = false
+  const options = item.selectedOptions
+  roleId.value = options[0].value
+  // modelId.value = options[1].value
+  // modelValue.value = getModelName(modelId.value)
+  chatId.value = ""
+  chatData.value = []
+  role.value = getRoleById(roleId.value)
+  title.value = "新建对话"
+  connect(chatId.value, roleId.value, modelId.value)
+}
+
+const chatData = ref([])
+const loading = ref(false)
+const finished = ref(false)
+const error = ref(false)
+
+const mathjaxPlugin = require('markdown-it-mathjax3')
+const md = require('markdown-it')({
+  breaks: true,
+  html: true,
+  linkify: true,
+  typographer: true,
+  highlight: function (str, lang) {
+    const codeIndex = parseInt(Date.now()) + Math.floor(Math.random() * 10000000)
+    // 显示复制代码按钮
+    const copyBtn = `<span class="copy-code-mobile" data-clipboard-action="copy" data-clipboard-target="#copy-target-${codeIndex}">复制</span>
+<textarea style="position: absolute;top: -9999px;left: -9999px;z-index: -9999;" id="copy-target-${codeIndex}">${str.replace(/<\/textarea>/g, '&lt;/textarea>')}</textarea>`
+    if (lang && hl.getLanguage(lang)) {
+      const langHtml = `<span class="lang-name">${lang}</span>`
+      // 处理代码高亮
+      const preCode = hl.highlight(lang, str, true).value
+      // 将代码包裹在 pre 中
+      return `<pre class="code-container"><code class="language-${lang} hljs">${preCode}</code>${copyBtn} ${langHtml}</pre>`
+    }
+
+    // 处理代码高亮
+    const preCode = md.utils.escapeHtml(str)
+    // 将代码包裹在 pre 中
+    return `<pre class="code-container"><code class="language-${lang} hljs">${preCode}</code>${copyBtn}</pre>`
+  }
+});
+md.use(mathjaxPlugin)
+
+
+const onLoad = () => {
+  if (chatId.value) {
+    checkSession().then(() => {
+      httpGet('/api/chat/history?chat_id=' + chatId.value).then(res => {
+        // 加载状态结束
+        finished.value = true;
+        const data = res.data
+        if (data && data.length > 0) {
+          for (let i = 0; i < data.length; i++) {
+            if (data[i].type === "prompt") {
+              chatData.value.push(data[i]);
+              continue;
+            }
+
+            data[i].orgContent = data[i].content;
+            data[i].content = md.render(processContent(data[i].content))
+            chatData.value.push(data[i]);
+          }
+
+          nextTick(() => {
+            hl.configure({ignoreUnescapedHTML: true})
+            const blocks = document.querySelector("#message-list-box").querySelectorAll('pre code');
+            blocks.forEach((block) => {
+              hl.highlightElement(block)
+            })
+
+            scrollListBox()
+          })
+        }
+        connect(chatId.value, roleId.value, modelId.value);
+      }).catch(() => {
+        error.value = true
+      })
+    }).catch(() => {
+    })
+  }
 };
+
+// 离开页面时主动关闭 websocket 连接，节省网络资源
+onBeforeRouteLeave(() => {
+  if (socket.value !== null) {
+    activelyClose.value = true;
+    clearTimeout(heartbeatHandle.value)
+    socket.value.close();
+  }
+
+})
 
 // 创建 socket 连接
 const prompt = ref('');
@@ -200,16 +348,12 @@ const lineBuffer = ref(''); // 输出缓冲行
 const socket = ref(null);
 const activelyClose = ref(false); // 主动关闭
 const canSend = ref(true);
-const connect = function (chat_id, role_id) {
+const heartbeatHandle = ref(null)
+const connect = function (chat_id, role_id, model_id) {
   let isNewChat = false;
   if (!chat_id) {
     isNewChat = true;
     chat_id = UUID();
-  }
-  // 先关闭已有连接
-  if (socket.value !== null) {
-    activelyClose.value = true;
-    socket.value.close();
   }
 
   // 初始化 WebSocket 对象
@@ -222,7 +366,20 @@ const connect = function (chat_id, role_id) {
       host = 'ws://' + location.host;
     }
   }
-  const _socket = new WebSocket(host + `infra/ws/chat?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${model}&token=${getUserToken()}`);
+
+  // 心跳函数
+  const sendHeartbeat = () => {
+    if (socket.value !== null) {
+      new Promise((resolve) => {
+        socket.value.send(JSON.stringify({type: "heartbeat", content: "ping"}))
+        resolve("success")
+      }).then(() => {
+        heartbeatHandle.value = setTimeout(() => sendHeartbeat(), 5000)
+      });
+    }
+  }
+
+  const _socket = new WebSocket(host + `infra/ws/chat?session_id=${_sessionId}&role_id=${role_id}&chat_id=${chat_id}&model_id=${model_id}&token=${getUserToken()}`);
   _socket.addEventListener('open', () => {
     loading.value = false
     previousText.value = '';
@@ -233,69 +390,45 @@ const connect = function (chat_id, role_id) {
       chatData.value.push({
         type: "reply",
         id: randString(32),
-        icon: role.icon,
-        content: role.helloMsg,
-        orgContent: role.helloMsg,
+        icon: role.value.icon,
+        content: role.value.helloMsg,
+        orgContent: role.value.helloMsg,
       })
     }
+
+    // 发送心跳消息
+    sendHeartbeat()
   });
 
   _socket.addEventListener('message', event => {
-    
     if (event.data instanceof Blob) {
       const reader = new FileReader();
       reader.readAsText(event.data, "UTF-8");
       reader.onload = () => {
         const data = JSON.parse(String(reader.result));
-        
         if (data.type === 'start') {
+          console.log('start', data)
           chatData.value.push({
             type: "reply",
             id: randString(32),
-            icon: role.icon,
+            icon: role.value.icon,
             content: ""
           });
-        } else if (data.type === "mj") {
-          disableInput(true)
-          const content = data.content;
-          const md = require('markdown-it')({breaks: true});
-          content.html = md.render(content.content)
-          let key = content.key
-          // fixed bug: 执行 Upscale 和 Variation 操作的时候覆盖之前的绘画
-          if (content.status === "Finished") {
-            key = randString(32)
-            enableInput()
+          if (isNewChat) {
+            title.value = previousText.value
           }
-          // console.log(content)
-          // check if the message is in chatData
-          let flag = false
-          for (let i = 0; i < chatData.value.length; i++) {
-            if (chatData.value[i].id === content.key) {
-              flag = true
-              chatData.value[i].content = content
-              chatData.value[i].id = key
-              break
-            }
-          }
-          if (flag === false) {
-            chatData.value.push({
-              type: "mj",
-              id: key,
-              icon: "/images/avatar/mid_journey.png",
-              content: content
-            });
-          }
-
         } else if (data.type === 'end') { // 消息接收完毕
           enableInput()
           lineBuffer.value = ''; // 清空缓冲
 
-        } else {
+        } else if(data.type === 'heartbeat') {
+          // 心跳消息，忽略
+        } 
+        else {
           lineBuffer.value += data.content;
-          const md = require('markdown-it')({breaks: true});
           const reply = chatData.value[chatData.value.length - 1]
           reply['orgContent'] = lineBuffer.value;
-          reply['content'] = md.render(lineBuffer.value);
+          reply['content'] = md.render(processContent(lineBuffer.value));
 
           nextTick(() => {
             hl.configure({ignoreUnescapedHTML: true})
@@ -305,6 +438,18 @@ const connect = function (chat_id, role_id) {
               hl.highlightElement(block)
             })
             scrollListBox()
+
+            const items = document.querySelectorAll('.message-line')
+            const imgs = items[items.length - 1].querySelectorAll('img')
+            for (let i = 0; i < imgs.length; i++) {
+              if (!imgs[i].src) {
+                continue
+              }
+              imgs[i].addEventListener('click', (e) => {
+                e.stopPropagation()
+                showImagePreview([imgs[i].src]);
+              })
+            }
           })
         }
 
@@ -314,17 +459,16 @@ const connect = function (chat_id, role_id) {
   });
 
   _socket.addEventListener('close', () => {
-    if (activelyClose.value) { // 忽略主动关闭
+    if (activelyClose.value || socket.value === null) { // 忽略主动关闭
       return;
     }
     // 停止发送消息
     canSend.value = true;
-    socket.value = null;
+    // 重连
     checkSession().then(() => {
-      connect(chat_id, role_id)
+      connect(chat_id, role_id, model_id)
     }).catch(() => {
-      loading.value = true
-      setTimeout(() => connect(chat_id, role_id), 3000)
+      showLoginDialog(router)
     });
   });
 
@@ -355,6 +499,7 @@ const sendMessage = () => {
   }
 
   if (prompt.value.trim().length === 0) {
+    showToast("请输入需要 AI 回答的问题")
     return false;
   }
 
@@ -364,7 +509,7 @@ const sendMessage = () => {
     id: randString(32),
     icon: loginUser.value.avatar,
     content: renderInputText(prompt.value),
-    created_at: new Date().getTime(),
+    createdAt: new Date().getTime(),
   });
 
   nextTick(() => {
@@ -372,7 +517,7 @@ const sendMessage = () => {
   })
 
   disableInput(false)
-  socket.value.send(prompt.value);
+  socket.value.send(JSON.stringify({type: "chat", content: prompt.value}));
   previousText.value = prompt.value;
   prompt.value = '';
   return true;
@@ -395,22 +540,84 @@ const reGenerate = () => {
     icon: loginUser.value.avatar,
     content: renderInputText(text)
   });
-  socket.value.send(text);
+  socket.value.send(JSON.stringify({type: "chat", content: previousText.value}));
 }
 
 const showShare = ref(false)
 const shareOptions = [
-  {name: '微信', icon: 'wechat'},
-  {name: '微博', icon: 'weibo'},
+  // {name: '微信', icon: 'wechat'},
   {name: '复制链接', icon: 'link'},
-  {name: '分享海报', icon: 'poster'},
 ]
-const shareChat = () => {
+const shareChat = (option) => {
   showShare.value = false
-  router.push('/mobile/Invitation');
+  if (option.icon === "wechat") {
+    showToast({message: "当前会话已经导出，请通过浏览器或者微信的自带分享功能分享给好友", duration: 5000})
+    router.push({
+      path: "/mobile/chat/export",
+      query: {title: title.value, chat_id: chatId.value, role: role.value.name, model: modelValue.value}
+    })
+  } else if (option.icon === "link") {
+    // 修改button的clipboard数据
+    if (chatId.value) {
+      url.value = location.protocol + '//' + location.host + '/mobile/chat/export?chat_id=' + chatId.value
+      document.getElementById('copy-link-btn').click();
+    }
+    else {
+      showToast({message: "当前会话没有保存，请先保存会话", duration: 5000})
+    }
+  }
 }
+
+const goChatList = () => {
+  sessionStorage.setItem('role_id', roleId.value)
+  router.push('/mobile/chat')
+}
+
+const getRoleById = function (rid) {
+  for (let i = 0; i < roles.value.length; i++) {
+    if (roles.value[i]['id'] === rid) {
+      return roles.value[i];
+    }
+  }
+  return null;
+}
+
+const getModelName = (model_id) => {
+  for (let i = 0; i < models.value.length; i++) {
+    if (models.value[i].id === model_id) {
+      return models.value[i].text
+    }
+  }
+  return ""
+}
+
+// // eslint-disable-next-line no-undef
+// const recognition = new webkitSpeechRecognition() || SpeechRecognition();
+// //recognition.lang = 'zh-CN' // 设置语音识别语言
+// recognition.onresult = function (event) {
+//   prompt.value = event.results[0][0].transcript
+// };
+//
+// recognition.onerror = function (event) {
+//   showMic.value = false
+//   recognition.stop()
+//   showNotify({type: 'danger', message: '语音识别错误:' + event.error})
+// };
+//
+// recognition.onend = function () {
+//   console.log('语音识别结束');
+// };
+// const inputVoice = () => {
+//   showMic.value = true
+//   recognition.start();
+// }
+//
+// const stopVoice = () => {
+//   showMic.value = false
+//   recognition.stop()
+// }
 </script>
 
-<style lang="stylus" scoped>
-@import "@/assets/css/mobile/chat-session.css"
+<style lang="stylus">
+@import "@/assets/css/mobile/chat-session.styl"
 </style>

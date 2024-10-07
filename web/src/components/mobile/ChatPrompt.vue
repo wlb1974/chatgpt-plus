@@ -16,6 +16,7 @@ import {onMounted, ref} from "vue";
 import Clipboard from "clipboard";
 import {showNotify} from "vant";
 
+// eslint-disable-next-line no-unused-vars,no-undef
 const props = defineProps({
   content: {
     type: String,
@@ -77,7 +78,7 @@ onMounted(() => {
       padding: 5px 10px;
       background-color: #98E165;
       color #444444
-      font-size: 16px
+      font-size: 14px
       border-radius: 5px
       line-height 1.5
     }

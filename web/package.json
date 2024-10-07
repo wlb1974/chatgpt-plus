@@ -25,6 +25,7 @@
     "markdown-it": "^14.1.0",
     "markdown-it-mathjax3": "^4.3.2",
     "md-editor-v3": "^2.2.1",
+    "mitt": "^3.0.1",
     "moment": "^2.29.4",
     "pinia": "^2.1.4",
     "qrcode": "^1.5.3",
@@ -33,7 +34,7 @@
     "socket.io-client": "^4.6.1",
     "sortablejs": "^1.15.0",
     "v3-waterfall": "^1.2.1",
-    "vant": "^4.5.0",
+    "vant": "^4.9.7",
     "vue": "^3.4.7",
     "vue-router": "^4.0.15"
   },
